@@ -1,0 +1,1736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>NOVA Studio — AI Creative Suite</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root {
+  --bg0:#07080f; --bg1:#0e0f1a; --bg2:#13141f; --bg3:#181926; --bg4:#1d1e2c; --bg5:#242535;
+  --b1:rgba(255,255,255,.06); --b2:rgba(255,255,255,.1); --b3:rgba(255,255,255,.18);
+  --c1:#e8ff47; --c2:#00e5c4; --c3:#ff4d6d; --c4:#7b5ea7;
+  --c1d:rgba(232,255,71,.1); --c2d:rgba(0,229,196,.1); --c3d:rgba(255,77,109,.1);
+  --txt:#eef0f8; --txt2:#7b7d95; --txt3:#3a3b52;
+  --ok:#22c55e; --err:#ef4444; --warn:#f59e0b;
+  --r:6px; --r2:10px; --r3:16px;
+  --sb:194px; --rb:228px; --topH:40px; --aiH:46px;
+  --font:'Space Grotesk',sans-serif; --disp:'Syne',sans-serif; --mono:'JetBrains Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;overflow:hidden;font-family:var(--font);}
+body{background:var(--bg0);color:var(--txt);display:flex;flex-direction:column;}
+::-webkit-scrollbar{width:4px;height:4px;} ::-webkit-scrollbar-track{background:transparent;} ::-webkit-scrollbar-thumb{background:var(--bg5);border-radius:9px;}
+input[type=range]{-webkit-appearance:none;width:100%;height:3px;background:var(--bg5);border-radius:9px;outline:none;cursor:pointer;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;background:var(--c1);border-radius:50%;cursor:pointer;border:2px solid var(--bg2);}
+input[type=number]::-webkit-inner-spin-button{opacity:.4;}
+a{color:var(--c2);text-decoration:none;}
+a:hover{text-decoration:underline;}
+/* TOPBAR */
+#topbar{height:var(--topH);flex-shrink:0;display:flex;align-items:center;padding:0 10px;gap:0;background:var(--bg1);border-bottom:1px solid var(--b1);z-index:200;position:relative;}
+#logo{font-family:var(--disp);font-size:17px;font-weight:800;color:var(--c1);letter-spacing:-0.5px;padding:0 14px 0 3px;display:flex;align-items:center;gap:7px;}
+#logo .sub{font-family:var(--mono);font-size:9px;color:var(--txt3);font-weight:400;letter-spacing:2px;}
+.tabs{display:flex;gap:1px;padding:0 8px;border-left:1px solid var(--b1);border-right:1px solid var(--b1);}
+.tab{height:26px;padding:0 12px;border-radius:5px;border:none;background:transparent;color:var(--txt2);font-size:12px;font-weight:500;cursor:pointer;font-family:var(--font);transition:all .15s;display:flex;align-items:center;gap:5px;}
+.tab:hover{background:var(--bg3);color:var(--txt);}
+.tab.on{background:var(--c1d);color:var(--c1);}
+.sp{flex:1;}
+.top-btn{height:26px;padding:0 11px;border-radius:5px;border:1px solid var(--b2);background:var(--bg3);color:var(--txt2);font-size:11.5px;font-weight:500;cursor:pointer;font-family:var(--font);display:flex;align-items:center;gap:5px;transition:all .15s;white-space:nowrap;}
+.top-btn:hover{background:var(--bg4);color:var(--txt);border-color:var(--b3);}
+.top-btn.hi{background:var(--c1);color:#000;border-color:var(--c1);font-weight:700;}
+.top-btn.hi:hover{background:#d0e63d;}
+.top-btn.teal{background:var(--c2);color:#000;border-color:var(--c2);font-weight:700;}
+.top-btn.teal:hover{background:#00c8ad;}
+#apidot{width:7px;height:7px;border-radius:50%;background:var(--txt3);transition:background .4s;flex-shrink:0;}
+#apidot.ok{background:var(--ok);box-shadow:0 0 5px var(--ok);}
+#apidot.warn{background:var(--warn);}
+.vsep{width:1px;height:16px;background:var(--b1);margin:0 6px;flex-shrink:0;}
+/* WORKSPACE */
+#ws{flex:1;display:flex;overflow:hidden;}
+/* LEFT SIDEBAR */
+#lsb{width:var(--sb);flex-shrink:0;background:var(--bg1);border-right:1px solid var(--b1);overflow-y:auto;display:flex;flex-direction:column;}
+.lsec{padding:8px;border-bottom:1px solid var(--b1);}
+.lhd{font-size:9px;font-weight:700;color:var(--txt3);letter-spacing:2px;padding:3px 4px 7px;text-transform:uppercase;font-family:var(--mono);}
+.tgrid{display:grid;grid-template-columns:1fr 1fr;gap:3px;}
+.tbtn{height:40px;border-radius:var(--r);border:1px solid transparent;background:transparent;color:var(--txt2);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:10px;font-weight:500;font-family:var(--font);transition:all .15s;}
+.tbtn svg{width:16px;height:16px;opacity:.65;flex-shrink:0;}
+.tbtn:hover{background:var(--bg3);color:var(--txt);border-color:var(--b1);}
+.tbtn.on{background:var(--c1d);color:var(--c1);border-color:rgba(232,255,71,.22);}
+.tbtn.on svg{opacity:1;}
+.sbtn{display:block;width:100%;height:27px;border-radius:5px;border:1px solid transparent;background:transparent;color:var(--txt2);font-size:11px;cursor:pointer;padding:0 8px;text-align:left;font-family:var(--font);transition:all .15s;}
+.sbtn:hover{background:var(--bg3);color:var(--txt);border-color:var(--b1);}
+.swatch-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:3px;}
+.sw{aspect-ratio:1;border-radius:3px;border:1px solid var(--b1);cursor:pointer;transition:transform .15s;}
+.sw:hover{transform:scale(1.12);border-color:var(--c1);}
+/* CANVAS AREA */
+#carea{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+#ctoolbar{height:34px;flex-shrink:0;display:flex;align-items:center;gap:2px;padding:0 8px;background:var(--bg1);border-bottom:1px solid var(--b1);}
+.ctbtn{height:22px;padding:0 8px;border-radius:4px;border:transparent;background:transparent;color:var(--txt2);font-size:11px;cursor:pointer;font-family:var(--font);display:flex;align-items:center;gap:4px;transition:all .12s;white-space:nowrap;}
+.ctbtn:hover{background:var(--bg3);color:var(--txt);}
+.ctbtn.on{background:var(--c1d);color:var(--c1);}
+.ctsep{width:1px;height:13px;background:var(--b1);margin:0 2px;}
+#cnv-size-lbl{font-size:10px;color:var(--txt3);font-family:var(--mono);}
+#cnv-wrap{flex:1;overflow:auto;display:flex;align-items:center;justify-content:center;padding:24px;position:relative;}
+#cnv-wrap::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 55% 45% at 12% 55%,rgba(232,255,71,.03) 0%,transparent 65%),radial-gradient(ellipse 45% 55% at 88% 20%,rgba(0,229,196,.03) 0%,transparent 65%);pointer-events:none;}
+#cnv-shadow{position:relative;box-shadow:0 0 0 1px var(--b2),0 20px 60px rgba(0,0,0,.9);}
+/* RIGHT PANEL */
+#rpanel{width:var(--rb);flex-shrink:0;background:var(--bg1);border-left:1px solid var(--b1);display:flex;flex-direction:column;overflow:hidden;}
+.ptabs{display:flex;padding:0 5px;border-bottom:1px solid var(--b1);height:32px;align-items:flex-end;flex-shrink:0;}
+.ptab{height:26px;padding:0 9px;border-radius:4px 4px 0 0;border:none;background:transparent;color:var(--txt2);font-size:11px;cursor:pointer;font-family:var(--font);transition:all .15s;font-weight:500;}
+.ptab:hover{color:var(--txt);}
+.ptab.on{color:var(--c1);background:var(--c1d);}
+.pbody{flex:1;overflow-y:auto;}
+.psec{padding:9px;border-bottom:1px solid var(--b1);}
+.plbl{font-size:9px;font-weight:700;color:var(--txt3);letter-spacing:2px;margin-bottom:8px;text-transform:uppercase;font-family:var(--mono);}
+.pr{display:flex;align-items:center;gap:5px;margin-bottom:6px;}
+.pr label{font-size:10.5px;color:var(--txt2);width:52px;flex-shrink:0;}
+.pi{flex:1;height:25px;background:var(--bg2);border:1px solid var(--b2);border-radius:4px;color:var(--txt);font-size:11px;padding:0 7px;font-family:var(--font);outline:none;transition:border .15s;}
+.pi:focus{border-color:var(--c2);}
+.pi[type=color]{padding:2px 3px;cursor:pointer;}
+.psel{flex:1;height:25px;background:var(--bg2);border:1px solid var(--b2);border-radius:4px;color:var(--txt);font-size:10.5px;padding:0 5px;font-family:var(--font);outline:none;cursor:pointer;appearance:none;}
+.psel option{background:var(--bg2);}
+.irow{display:flex;gap:2px;}
+.ibtn{height:25px;width:25px;border-radius:4px;border:1px solid var(--b2);background:var(--bg3);color:var(--txt2);font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;}
+.ibtn:hover{background:var(--bg4);color:var(--txt);}
+.ibtn.on{background:var(--c1d);color:var(--c1);border-color:rgba(232,255,71,.3);}
+.no-sel{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--txt3);font-size:11.5px;gap:10px;text-align:center;padding:24px;opacity:.6;}
+.ai-quick{display:flex;flex-wrap:wrap;gap:3px;padding:1px 0;}
+.aqb{height:22px;padding:0 8px;border-radius:99px;border:1px solid var(--b2);background:var(--bg3);color:var(--txt2);font-size:10px;cursor:pointer;font-family:var(--font);transition:all .15s;white-space:nowrap;}
+.aqb:hover{border-color:var(--c1);color:var(--c1);}
+/* Layers */
+#lay-list{padding:5px;}
+.lay-item{display:flex;align-items:center;gap:5px;padding:5px 6px;border-radius:5px;cursor:pointer;border:1px solid transparent;transition:all .12s;margin-bottom:2px;}
+.lay-item:hover{background:var(--bg3);}
+.lay-item.on{background:var(--c1d);border-color:rgba(232,255,71,.2);}
+.lay-ico{font-size:11px;width:16px;text-align:center;flex-shrink:0;}
+.lay-lbl{flex:1;font-size:10.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--txt2);}
+.lay-item.on .lay-lbl{color:var(--c1);}
+.lay-acts{display:flex;gap:1px;flex-shrink:0;}
+.lay-acts button{width:18px;height:18px;border-radius:3px;border:none;background:transparent;color:var(--txt3);font-size:10px;cursor:pointer;transition:all .12s;}
+.lay-acts button:hover{background:var(--bg5);color:var(--txt);}
+/* AI BAR */
+#aibar{height:var(--aiH);flex-shrink:0;background:var(--bg1);border-top:1px solid var(--b1);display:flex;align-items:center;gap:5px;padding:0 12px;overflow-x:auto;}
+#aibar .ailbl{font-family:var(--mono);font-size:9px;color:var(--txt3);letter-spacing:2px;flex-shrink:0;}
+.aisep{width:1px;height:16px;background:var(--b1);flex-shrink:0;}
+.aibtn{height:28px;padding:0 12px;border-radius:99px;border:1px solid var(--b2);background:var(--bg3);color:var(--txt);font-size:11px;font-weight:500;cursor:pointer;font-family:var(--font);display:flex;align-items:center;gap:6px;transition:all .15s;white-space:nowrap;flex-shrink:0;}
+.aibtn:hover{background:var(--bg4);border-color:var(--c1);}
+.pip{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
+.pip.y{background:var(--c1);} .pip.t{background:var(--c2);} .pip.r{background:var(--c3);} .pip.p{background:var(--c4);}
+/* VIDEO MODE */
+#vmode{flex:1;display:none;flex-direction:column;overflow:hidden;}
+#vmode.show{display:flex;}
+#vm-body{flex:1;display:flex;overflow:hidden;}
+#vm-preview{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg0);}
+#vdropzone{flex:1;margin:20px;border:2px dashed var(--b2);border-radius:var(--r3);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--txt2);cursor:pointer;transition:all .2s;background:var(--bg2);}
+#vdropzone:hover,#vdropzone.over{border-color:var(--c1);color:var(--txt);}
+#vdropzone svg{width:48px;height:48px;opacity:.3;}
+#vdropzone .big{font-family:var(--disp);font-size:18px;font-weight:700;}
+#vdropzone .sm{font-size:12px;color:var(--txt3);}
+#vplayer{display:none;flex:1;flex-direction:column;overflow:hidden;}
+#vplayer.show{display:flex;}
+#vscreen{flex:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#000;}
+#vid{max-width:100%;max-height:100%;display:block;}
+#cap-overlay{position:absolute;bottom:50px;left:50%;transform:translateX(-50%);max-width:92%;text-align:center;pointer-events:none;display:none;z-index:10;}
+/* Crop overlay */
+#crop-overlay{position:absolute;inset:0;display:none;z-index:20;}
+#crop-overlay.show{display:block;}
+#crop-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;}
+.ch{position:absolute;width:14px;height:14px;background:#fff;border:2px solid var(--c1);border-radius:2px;cursor:pointer;z-index:30;transform:translate(-50%,-50%);}
+#crop-box{position:absolute;cursor:move;z-index:25;border:2px solid var(--c1);}
+/* Video controls */
+#vctrl{height:38px;display:flex;align-items:center;gap:8px;padding:0 10px;background:var(--bg2);border-top:1px solid var(--b1);flex-shrink:0;}
+#vplay{width:28px;height:28px;border-radius:50%;border:none;background:var(--c1);color:#000;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;}
+#vbar{flex:1;height:3px;background:var(--bg5);border-radius:9px;cursor:pointer;position:relative;}
+#vfill{height:100%;border-radius:9px;background:var(--c2);width:0;pointer-events:none;}
+#vtime{font-family:var(--mono);font-size:10.5px;color:var(--txt2);flex-shrink:0;}
+.vctbtn{height:24px;padding:0 8px;border-radius:4px;border:1px solid var(--b2);background:var(--bg3);color:var(--txt2);font-size:10.5px;cursor:pointer;font-family:var(--font);transition:all .12s;flex-shrink:0;}
+.vctbtn:hover{background:var(--bg4);color:var(--txt);}
+.vctbtn.on{background:var(--c1d);color:var(--c1);border-color:rgba(232,255,71,.3);}
+/* Trim timeline */
+#trim-wrap{height:48px;flex-shrink:0;background:var(--bg1);border-top:1px solid var(--b1);display:flex;align-items:center;padding:0 12px;gap:8px;}
+#trim-bar{flex:1;height:26px;position:relative;cursor:pointer;}
+#trim-track{position:absolute;top:50%;left:0;right:0;height:4px;background:var(--bg5);transform:translateY(-50%);border-radius:9px;}
+#trim-played{position:absolute;top:50%;height:4px;background:rgba(0,229,196,.3);transform:translateY(-50%);border-radius:9px;pointer-events:none;}
+#trim-region{position:absolute;top:50%;height:4px;background:var(--c1);transform:translateY(-50%);pointer-events:none;}
+.trim-h{position:absolute;top:50%;width:12px;height:20px;background:var(--c1);border-radius:3px;transform:translate(-50%,-50%);cursor:ew-resize;z-index:5;display:flex;align-items:center;justify-content:center;}
+.trim-h::after{content:'';width:2px;height:9px;background:rgba(0,0,0,.35);border-radius:9px;}
+#trim-dur{font-family:var(--mono);font-size:10px;color:var(--txt2);white-space:nowrap;}
+/* Video right panel */
+#vm-rp{width:var(--rb);flex-shrink:0;background:var(--bg1);border-left:1px solid var(--b1);display:flex;flex-direction:column;overflow:hidden;}
+.vpbody{flex:1;overflow-y:auto;}
+.vpbody .psec .pr label{width:64px;}
+.vs-row{display:flex;align-items:center;gap:6px;margin-bottom:7px;}
+.vs-row label{font-size:10.5px;color:var(--txt2);width:64px;flex-shrink:0;}
+.vs-row .vv{font-family:var(--mono);font-size:9.5px;color:var(--txt3);width:36px;text-align:right;flex-shrink:0;}
+/* Captions */
+#cap-list{padding:5px;}
+.citem{border-radius:5px;border:1px solid var(--b1);background:var(--bg2);margin-bottom:4px;padding:6px 8px;cursor:pointer;transition:all .12s;}
+.citem:hover{border-color:var(--b2);}
+.citem.on{border-color:var(--c1);background:var(--c1d);}
+.ct-time{font-family:var(--mono);font-size:9px;color:var(--c2);margin-bottom:2px;}
+.ct-txt{font-size:11.5px;color:var(--txt);line-height:1.4;outline:none;}
+.ct-txt:focus{color:var(--c2);}
+/* MODALS */
+.moverlay{position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(8px);z-index:900;display:none;align-items:center;justify-content:center;}
+.moverlay.open{display:flex;}
+.mbox{background:var(--bg2);border:1px solid var(--b2);border-radius:var(--r3);padding:22px;width:500px;max-width:96vw;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.9);animation:mup .2s ease;}
+@keyframes mup{from{transform:translateY(10px);opacity:0}to{transform:none;opacity:1}}
+.mhd{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;}
+.mtitle{font-family:var(--disp);font-size:16px;font-weight:700;display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+.mbadge{font-size:9px;font-family:var(--mono);padding:2px 7px;border-radius:99px;background:var(--c1d);color:var(--c1);letter-spacing:1px;}
+.mbadge.t{background:var(--c2d);color:var(--c2);}
+.mbadge.r{background:var(--c3d);color:var(--c3);}
+.msub{font-size:12px;color:var(--txt2);margin-bottom:14px;line-height:1.5;}
+.mclose{width:24px;height:24px;border-radius:50%;border:1px solid var(--b2);background:var(--bg3);color:var(--txt2);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.mclose:hover{color:var(--txt);}
+.mf{margin-bottom:12px;}
+.mf label{display:block;font-size:11px;font-weight:500;color:var(--txt2);margin-bottom:4px;}
+.mf textarea,.mf input[type=text],.mf input[type=password],.mf select{width:100%;background:var(--bg3);border:1px solid var(--b2);border-radius:var(--r);color:var(--txt);padding:8px 10px;font-size:12px;font-family:var(--font);outline:none;transition:border .15s;}
+.mf textarea:focus,.mf input:focus{border-color:var(--c2);}
+.mf textarea{min-height:76px;resize:vertical;}
+.mf select{appearance:none;height:32px;padding:0 10px;cursor:pointer;}
+.mf select option{background:var(--bg3);}
+.mrow{display:flex;gap:7px;margin-top:14px;}
+.mb{flex:1;height:34px;border-radius:var(--r);border:1px solid var(--b2);background:var(--bg4);color:var(--txt);font-size:12px;font-weight:500;cursor:pointer;font-family:var(--font);transition:all .15s;}
+.mb:hover{background:var(--bg5);}
+.mb.y{background:var(--c1);color:#000;border-color:var(--c1);font-weight:700;}
+.mb.y:hover{background:#d0e63d;}
+.mb.t{background:var(--c2);color:#000;border-color:var(--c2);font-weight:700;}
+.mb.t:hover{background:#00c8ad;}
+.mb.r{background:var(--c3);color:#fff;border-color:var(--c3);font-weight:700;}
+.mb.r:hover{background:#e03059;}
+.rbox{margin-top:10px;background:var(--bg3);border:1px solid var(--b1);border-radius:var(--r);padding:10px;font-size:12px;line-height:1.6;color:var(--txt);white-space:pre-wrap;display:none;max-height:180px;overflow-y:auto;}
+.rbox.open{display:block;}
+.ract{display:flex;gap:5px;margin-top:7px;flex-wrap:wrap;display:none;}
+.ract.open{display:flex;}
+.ract button{height:26px;padding:0 10px;border-radius:4px;border:1px solid var(--b2);background:var(--bg4);color:var(--txt2);font-size:10.5px;cursor:pointer;font-family:var(--font);transition:all .12s;}
+.ract button:hover{color:var(--txt);background:var(--bg5);}
+.prog{height:3px;background:var(--bg5);border-radius:9px;margin-top:9px;overflow:hidden;display:none;}
+.prog.open{display:block;}
+.progfill{height:100%;background:linear-gradient(90deg,var(--c1),var(--c2));border-radius:9px;animation:progani 1.5s ease-in-out infinite;}
+@keyframes progani{0%{width:0;margin-left:0}50%{width:65%;margin-left:15%}100%{width:0;margin-left:100%}}
+/* Voice grid */
+.vgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:10px;}
+.vopt{padding:8px 4px;border-radius:var(--r);border:1px solid var(--b2);background:var(--bg3);cursor:pointer;text-align:center;font-size:10.5px;color:var(--txt2);transition:all .12s;}
+.vopt:hover{border-color:var(--c2);color:var(--txt);}
+.vopt.on{border-color:var(--c2);background:var(--c2d);color:var(--c2);}
+.vopt .vn{font-weight:600;font-size:11.5px;margin-bottom:1px;}
+.vopt .vt{font-size:9.5px;opacity:.7;}
+/* Modal tabs */
+.mtabs{display:flex;gap:2px;border-bottom:1px solid var(--b1);margin-bottom:14px;}
+.mtab{height:28px;padding:0 11px;border-radius:5px 5px 0 0;border:none;background:transparent;color:var(--txt2);font-size:11px;cursor:pointer;font-family:var(--font);transition:all .15s;}
+.mtab.on{color:var(--c1);background:var(--c1d);}
+.mtp{display:none;} .mtp.on{display:block;}
+/* Palette swatches */
+.palbox{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;}
+.palsw{width:44px;border-radius:5px;border:1px solid var(--b2);cursor:pointer;overflow:hidden;}
+.palsw .pc{height:44px;}
+.palsw .ph{font-family:var(--mono);font-size:9px;padding:3px;color:var(--txt3);text-align:center;background:var(--bg3);}
+audio.maudio{width:100%;margin-top:10px;border-radius:var(--r);display:none;}
+audio.maudio.show{display:block;}
+/* TOAST */
+#toasts{position:fixed;bottom:18px;right:18px;z-index:1000;display:flex;flex-direction:column;gap:5px;pointer-events:none;}
+.toast{padding:8px 13px;background:var(--bg3);border:1px solid var(--b2);border-radius:var(--r);font-size:12px;color:var(--txt);box-shadow:0 8px 24px rgba(0,0,0,.6);animation:tin .2s ease;pointer-events:all;max-width:280px;}
+.toast.ok{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.07);color:var(--ok);}
+.toast.err{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.07);color:var(--err);}
+@keyframes tin{from{transform:translateX(14px);opacity:0}to{transform:none;opacity:1}}
+/* Util */
+.spin{animation:spin 1s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.kbd{font-family:var(--mono);font-size:9px;padding:1px 5px;border-radius:3px;background:var(--bg5);border:1px solid var(--b2);color:var(--txt3);}
+/* Export progress overlay */
+#export-overlay{position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:950;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;}
+#export-overlay.show{display:flex;}
+#export-overlay .etitle{font-family:var(--disp);font-size:22px;font-weight:700;color:var(--c1);}
+#export-overlay .esub{font-size:13px;color:var(--txt2);}
+#export-ring{width:80px;height:80px;border-radius:50%;border:4px solid var(--bg4);border-top-color:var(--c1);animation:spin 1s linear infinite;}
+#export-pct{font-family:var(--mono);font-size:28px;font-weight:700;color:var(--txt);}
+.etip{font-size:11px;color:var(--txt3);font-family:var(--mono);}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div id="topbar">
+  <div id="logo">NOVA <span class="sub">STUDIO</span></div>
+  <div class="tabs">
+    <button class="tab on" id="tab-design" onclick="setMode('design')">✦ Design</button>
+    <button class="tab" id="tab-video" onclick="setMode('video')">▶ Video</button>
+  </div>
+  <div class="sp"></div>
+  <div id="apidot" title="API status"></div>
+  <span id="api-lbl" style="font-size:10px;color:var(--txt3);font-family:var(--mono);margin-right:4px;">checking…</span>
+  <button class="top-btn" onclick="openModal('api-modal')">⚙ Keys</button>
+  <div class="vsep"></div>
+  <div id="design-exports" style="display:flex;gap:4px;">
+    <button class="top-btn" onclick="exportPNG()">↓ PNG</button>
+    <button class="top-btn" onclick="exportPDF()">↓ PDF</button>
+    <button class="top-btn" onclick="exportSVG()">↓ SVG</button>
+  </div>
+  <div id="video-exports" style="display:none;gap:4px;">
+    <button class="top-btn" onclick="doExportVideo()">↓ Export Video</button>
+    <button class="top-btn" onclick="exportSRT()">↓ SRT</button>
+    <button class="top-btn" onclick="exportVTT()">↓ VTT</button>
+  </div>
+  <div class="vsep"></div>
+  <button class="top-btn hi" onclick="openModal('ai-write-modal')">✦ AI</button>
+</div>
+
+<!-- WORKSPACE -->
+<div id="ws">
+
+  <!-- ===== DESIGN MODE ===== -->
+  <div id="design-mode" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+    <div style="flex:1;display:flex;overflow:hidden;">
+
+      <!-- Left sidebar -->
+      <div id="lsb">
+        <div class="lsec">
+          <div class="lhd">Tools</div>
+          <div class="tgrid">
+            <button class="tbtn on" id="t-select" onclick="setTool('select')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l14 9-7 2-3 7z"/></svg>Select</button>
+            <button class="tbtn" id="t-text" onclick="setTool('text')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>Text</button>
+            <button class="tbtn" id="t-rect" onclick="addShape('rect')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/></svg>Rect</button>
+            <button class="tbtn" id="t-circle" onclick="addShape('circle')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>Circle</button>
+            <button class="tbtn" id="t-tri" onclick="addShape('triangle')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4l9 16H3z"/></svg>Triangle</button>
+            <button class="tbtn" id="t-star" onclick="addShape('star')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>Star</button>
+            <button class="tbtn" id="t-arrow" onclick="addShape('arrow')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>Arrow</button>
+            <button class="tbtn" id="t-line" onclick="addShape('line')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="21" x2="21" y2="3"/></svg>Line</button>
+            <button class="tbtn" id="t-img" onclick="$('img-input').click()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>Image</button>
+            <button class="tbtn" id="t-draw" onclick="setTool('draw')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>Draw</button>
+          </div>
+        </div>
+        <div class="lsec">
+          <div class="lhd">Canvas</div>
+          <button class="sbtn" onclick="setSize(1280,720)">16:9  1280×720</button>
+          <button class="sbtn" onclick="setSize(1920,1080)">16:9  1920×1080</button>
+          <button class="sbtn" onclick="setSize(1080,1080)">1:1   Social Post</button>
+          <button class="sbtn" onclick="setSize(1080,1920)">9:16  Story/Reel</button>
+          <button class="sbtn" onclick="setSize(794,1123)">A4   Document</button>
+          <button class="sbtn" onclick="setSize(1200,630)">OG   Social Card</button>
+          <button class="sbtn" onclick="customSize()">Custom…</button>
+        </div>
+        <div class="lsec">
+          <div class="lhd">Background</div>
+          <div class="pr" style="margin-bottom:7px;"><label style="width:36px;">Color</label><input type="color" id="bg-c" class="pi" value="#ffffff" style="flex:1;height:25px;" onchange="setBg(this.value)"></div>
+          <div class="swatch-grid">
+            <div class="sw" style="background:#fff" onclick="setBg('#ffffff')"></div>
+            <div class="sw" style="background:#000" onclick="setBg('#000000')"></div>
+            <div class="sw" style="background:#07080f" onclick="setBg('#07080f')"></div>
+            <div class="sw" style="background:#1a1a2e" onclick="setBg('#1a1a2e')"></div>
+            <div class="sw" style="background:#f5f0e8" onclick="setBg('#f5f0e8')"></div>
+            <div class="sw" style="background:#0d1b2a" onclick="setBg('#0d1b2a')"></div>
+            <div class="sw" style="background:#2d1b69" onclick="setBg('#2d1b69')"></div>
+            <div class="sw" style="background:#1e3a2f" onclick="setBg('#1e3a2f')"></div>
+            <div class="sw" style="background:#3d1515" onclick="setBg('#3d1515')"></div>
+            <div class="sw" style="background:#162032" onclick="setBg('#162032')"></div>
+            <div class="sw" style="background:#e8ff47" onclick="setBg('#e8ff47')"></div>
+            <div class="sw" style="background:#ff4d6d" onclick="setBg('#ff4d6d')"></div>
+          </div>
+        </div>
+        <div class="lsec" style="border:none;">
+          <div class="lhd">Actions</div>
+          <button class="sbtn" onclick="undo()">↩ Undo <span class="kbd">Ctrl+Z</span></button>
+          <button class="sbtn" onclick="redo()">↪ Redo</button>
+          <button class="sbtn" onclick="dupSel()">⎘ Duplicate <span class="kbd">Ctrl+D</span></button>
+          <button class="sbtn" onclick="delSel()">✕ Delete</button>
+          <button class="sbtn" onclick="bringFwd()">↑ Bring Forward</button>
+          <button class="sbtn" onclick="sendBwd()">↓ Send Backward</button>
+          <button class="sbtn" onclick="if(confirm('Clear canvas?')){cnv.clear();setBg('#ffffff');saveH();}">⊘ Clear All</button>
+        </div>
+      </div>
+
+      <!-- Canvas -->
+      <div id="carea">
+        <div id="ctoolbar">
+          <span id="cnv-size-lbl" style="font-size:10px;color:var(--txt3);font-family:var(--mono);">1280×720</span>
+          <div class="ctsep"></div>
+          <button class="ctbtn" onclick="zIn()">＋</button>
+          <button class="ctbtn" onclick="zOut()">－</button>
+          <button class="ctbtn" onclick="zFit()">Fit</button>
+          <span id="zlbl" style="font-size:10px;color:var(--txt2);font-family:var(--mono);min-width:35px;">100%</span>
+          <div class="ctsep"></div>
+          <button class="ctbtn" onclick="align('left')" title="Align Left">⇤L</button>
+          <button class="ctbtn" onclick="align('cx')" title="Center H">⇔</button>
+          <button class="ctbtn" onclick="align('right')" title="Align Right">R⇥</button>
+          <button class="ctbtn" onclick="align('top')" title="Align Top">⇡T</button>
+          <button class="ctbtn" onclick="align('cy')" title="Center V">⇕</button>
+          <button class="ctbtn" onclick="align('bottom')" title="Align Bottom">B⇣</button>
+          <div class="ctsep"></div>
+          <button class="ctbtn" onclick="flipH()">↔ Flip H</button>
+          <button class="ctbtn" onclick="flipV()">↕ Flip V</button>
+          <button class="ctbtn" onclick="groupSel()">⊞ Group</button>
+          <button class="ctbtn" onclick="ungroupSel()">⊟ Ungroup</button>
+          <div class="ctsep"></div>
+          <button class="ctbtn" onclick="openModal('ai-bg-modal')">🎨 AI BG</button>
+          <button class="ctbtn" onclick="openModal('pal-modal')">✦ Palette</button>
+        </div>
+        <div id="cnv-wrap">
+          <div id="cnv-shadow"><canvas id="mc"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Right panel -->
+      <div id="rpanel">
+        <div class="ptabs">
+          <button class="ptab on" onclick="ptab('props')">Props</button>
+          <button class="ptab" onclick="ptab('layers')">Layers</button>
+          <button class="ptab" onclick="ptab('hist')">History</button>
+        </div>
+        <div class="pbody">
+          <!-- PROPS -->
+          <div id="pt-props">
+            <div id="no-sel" class="no-sel">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 3l14 9-7 2-3 7z"/></svg>
+              Select an object
+            </div>
+            <div id="sel-props" style="display:none;">
+              <!-- Transform -->
+              <div class="psec">
+                <div class="plbl">Transform</div>
+                <div class="pr"><label>X</label><input class="pi" id="px" type="number" onchange="sp('left',+v(this))"></div>
+                <div class="pr"><label>Y</label><input class="pi" id="py" type="number" onchange="sp('top',+v(this))"></div>
+                <div class="pr"><label>W</label><input class="pi" id="pw" type="number" onchange="spW(+v(this))"></div>
+                <div class="pr"><label>H</label><input class="pi" id="ph" type="number" onchange="spH(+v(this))"></div>
+                <div class="pr"><label>Rotate</label><input class="pi" id="prot" type="number" onchange="sp('angle',+v(this))"></div>
+                <div class="pr"><label>Opacity</label><input class="pi" id="pop" type="number" min="0" max="1" step=".05" onchange="sp('opacity',+v(this))"></div>
+                <div class="pr"><label>Lock Ratio</label><input type="checkbox" id="lockr" checked style="cursor:pointer;"></div>
+              </div>
+              <!-- Appearance -->
+              <div class="psec">
+                <div class="plbl">Appearance</div>
+                <div class="pr"><label>Fill</label><input class="pi" id="pfill" type="color" onchange="sp('fill',v(this))"></div>
+                <div class="pr"><label>Stroke</label><input class="pi" id="pstroke" type="color" onchange="sp('stroke',v(this))"></div>
+                <div class="pr"><label>S.Width</label><input class="pi" id="psw" type="number" min="0" max="40" onchange="sp('strokeWidth',+v(this))"></div>
+                <div class="pr"><label>S.Dash</label>
+                  <select class="psel" id="psd" onchange="setDash(v(this))">
+                    <option value="none">Solid</option>
+                    <option value="dashed">Dashed</option>
+                    <option value="dotted">Dotted</option>
+                  </select>
+                </div>
+                <div class="pr" id="rx-row" style="display:none;"><label>Radius</label><input class="pi" id="prx" type="number" min="0" max="300" onchange="sp('rx',+v(this));sp('ry',+v(this))"></div>
+              </div>
+              <!-- Text -->
+              <div id="text-panel" class="psec" style="display:none;">
+                <div class="plbl">Typography</div>
+                <div class="pr"><label>Font</label>
+                  <select class="psel" id="pfont" onchange="stp('fontFamily',v(this))">
+                    <option>Syne</option><option>Space Grotesk</option><option>JetBrains Mono</option>
+                    <option>Georgia</option><option>Palatino</option><option>Garamond</option>
+                    <option>Times New Roman</option><option>Impact</option><option>Arial Black</option>
+                    <option>Trebuchet MS</option><option>Verdana</option><option>Courier New</option>
+                  </select>
+                </div>
+                <div class="pr"><label>Size</label><input class="pi" id="pfs" type="number" min="6" max="400" onchange="stp('fontSize',+v(this))"></div>
+                <div class="pr"><label>Style</label>
+                  <div class="irow">
+                    <button class="ibtn" id="i-b" onclick="toggleBold()" title="Bold"><b>B</b></button>
+                    <button class="ibtn" id="i-i" onclick="toggleItalic()" title="Italic"><em>I</em></button>
+                    <button class="ibtn" id="i-u" onclick="toggleUnderline()" title="Underline"><u>U</u></button>
+                    <button class="ibtn" id="i-s" onclick="toggleStrike()" title="Strike"><s>S</s></button>
+                  </div>
+                </div>
+                <div class="pr"><label>Align</label>
+                  <div class="irow">
+                    <button class="ibtn" onclick="stp('textAlign','left')">≡L</button>
+                    <button class="ibtn" onclick="stp('textAlign','center')">≡C</button>
+                    <button class="ibtn" onclick="stp('textAlign','right')">≡R</button>
+                  </div>
+                </div>
+                <div class="pr"><label>Color</label><input class="pi" id="ptc" type="color" value="#000000" onchange="stp('fill',v(this))"></div>
+                <div class="pr"><label>LineH</label><input class="pi" id="plh" type="number" min=".5" max="5" step=".1" onchange="stp('lineHeight',+v(this))"></div>
+                <div class="pr"><label>Spacing</label><input class="pi" id="pls" type="number" step="1" onchange="stp('charSpacing',+v(this))"></div>
+                <div class="pr"><label>Outline</label><input class="pi" id="ptout" type="color" value="#000000" onchange="stp('stroke',v(this))"></div>
+                <div class="pr"><label>O.Width</label><input class="pi" id="ptoutw" type="number" min="0" max="12" step=".5" onchange="stp('strokeWidth',+v(this))"></div>
+                <div class="pr"><label>Sh.Color</label><input class="pi" id="pshc" type="color" value="#000000" onchange="updateShadow()"></div>
+                <div class="pr"><label>Sh.Blur</label><input class="pi" id="pshb" type="number" min="0" max="50" value="0" onchange="updateShadow()"></div>
+                <div class="pr"><label>Sh.X/Y</label>
+                  <input class="pi" id="pshx" type="number" min="-50" max="50" value="0" onchange="updateShadow()" style="flex:1;">
+                  <input class="pi" id="pshy" type="number" min="-50" max="50" value="0" onchange="updateShadow()" style="flex:1;margin-left:4px;">
+                </div>
+                <div class="plbl" style="margin-top:8px;">AI Text</div>
+                <div class="ai-quick">
+                  <button class="aqb" onclick="aiText('fix')">✓ Fix Grammar</button>
+                  <button class="aqb" onclick="aiText('expand')">↔ Expand</button>
+                  <button class="aqb" onclick="aiText('short')">⊂ Shorten</button>
+                  <button class="aqb" onclick="aiText('rephrase')">↺ Rephrase</button>
+                  <button class="aqb" onclick="gradFill()">◈ Gradient</button>
+                </div>
+              </div>
+              <!-- Image filters -->
+              <div id="img-panel" class="psec" style="display:none;">
+                <div class="plbl">Image Filters</div>
+                <div class="vs-row"><label>Brightness</label><input type="range" id="f-br" min="-1" max="1" step=".05" value="0" oninput="applyFilt()"><span class="vv" id="fv-br">0</span></div>
+                <div class="vs-row"><label>Contrast</label><input type="range" id="f-co" min="-1" max="1" step=".05" value="0" oninput="applyFilt()"><span class="vv" id="fv-co">0</span></div>
+                <div class="vs-row"><label>Saturation</label><input type="range" id="f-sa" min="-1" max="1" step=".05" value="0" oninput="applyFilt()"><span class="vv" id="fv-sa">0</span></div>
+                <div class="vs-row"><label>Blur</label><input type="range" id="f-bl" min="0" max="1" step=".02" value="0" oninput="applyFilt()"><span class="vv" id="fv-bl">0</span></div>
+                <div class="pr" style="margin-top:4px;">
+                  <div class="irow">
+                    <button class="ibtn" onclick="setFiltPreset('')" title="None">✕</button>
+                    <button class="ibtn" onclick="setFiltPreset('gs')" title="Grayscale">BW</button>
+                    <button class="ibtn" onclick="setFiltPreset('sep')" title="Sepia">SP</button>
+                    <button class="ibtn" onclick="setFiltPreset('inv')" title="Invert">IV</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- LAYERS -->
+          <div id="pt-layers" style="display:none;">
+            <div id="lay-list"></div>
+          </div>
+          <!-- HISTORY -->
+          <div id="pt-hist" style="display:none;">
+            <div id="hist-list" style="padding:5px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- AI Bar -->
+    <div id="aibar">
+      <span class="ailbl">AI</span><div class="aisep"></div>
+      <button class="aibtn" onclick="openModal('ai-write-modal')"><span class="pip y"></span> Copywriter</button>
+      <button class="aibtn" onclick="openModal('tts-modal')"><span class="pip t"></span> Text→Speech</button>
+      <button class="aibtn" onclick="openModal('stt-modal')"><span class="pip r"></span> Speech→Text</button>
+      <button class="aibtn" onclick="openModal('ai-bg-modal')"><span class="pip y"></span> AI Background</button>
+      <button class="aibtn" onclick="openModal('pal-modal')"><span class="pip t"></span> Color Palette</button>
+    </div>
+  </div>
+
+  <!-- ===== VIDEO MODE ===== -->
+  <div id="vmode">
+    <div id="vm-body">
+      <!-- Preview -->
+      <div id="vm-preview">
+        <div id="vdropzone" onclick="$('vid-input').click()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
+          <div class="big">Drop video here</div>
+          <div class="sm">MP4 · WebM · MOV — or click to browse</div>
+        </div>
+        <div id="vplayer">
+          <div id="vscreen">
+            <video id="vid" ontimeupdate="onVT()" onloadedmetadata="onVL()" onended="onVE()" preload="metadata" style="max-width:100%;max-height:100%;display:block;"></video>
+            <div id="cap-overlay"></div>
+            <div id="crop-overlay">
+              <canvas id="crop-canvas"></canvas>
+              <div class="ch" id="ch-tl" data-c="tl"></div>
+              <div class="ch" id="ch-tr" data-c="tr"></div>
+              <div class="ch" id="ch-bl" data-c="bl"></div>
+              <div class="ch" id="ch-br" data-c="br"></div>
+              <div class="ch" id="ch-tm" data-c="tm" style="cursor:n-resize;border-radius:50%;"></div>
+              <div class="ch" id="ch-bm" data-c="bm" style="cursor:s-resize;border-radius:50%;"></div>
+              <div class="ch" id="ch-ml" data-c="ml" style="cursor:w-resize;border-radius:50%;"></div>
+              <div class="ch" id="ch-mr" data-c="mr" style="cursor:e-resize;border-radius:50%;"></div>
+              <div id="crop-box"></div>
+            </div>
+          </div>
+          <!-- Controls -->
+          <div id="vctrl">
+            <button id="vplay" onclick="togglePlay()">▶</button>
+            <div id="vbar" onclick="seekV(event)"><div id="vfill"></div></div>
+            <span id="vtime">0:00 / 0:00</span>
+            <select class="vctbtn" id="vspd-sel" style="border:1px solid var(--b2);" onchange="document.getElementById('vid').playbackRate=+this.value">
+              <option value=".25">0.25×</option><option value=".5">0.5×</option>
+              <option value=".75">0.75×</option><option value="1" selected>1×</option>
+              <option value="1.25">1.25×</option><option value="1.5">1.5×</option>
+              <option value="2">2×</option>
+            </select>
+            <button class="vctbtn" onclick="vid.currentTime=vs.trimS">|◀ In</button>
+            <button class="vctbtn" onclick="vid.currentTime=vs.trimE">Out ▶|</button>
+            <button class="vctbtn on" id="mute-btn" onclick="toggleMute()">🔊</button>
+          </div>
+          <!-- Trim bar -->
+          <div id="trim-wrap">
+            <span style="font-family:var(--mono);font-size:9.5px;color:var(--txt3);flex-shrink:0;">TRIM</span>
+            <div id="trim-bar" onclick="seekByTrim(event)">
+              <div id="trim-track"></div>
+              <div id="trim-played"></div>
+              <div id="trim-region"></div>
+              <div class="trim-h" id="th-s" title="Trim In"></div>
+              <div class="trim-h" id="th-e" title="Trim Out"></div>
+            </div>
+            <span id="trim-dur">0:00</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Video right panel -->
+      <div id="vm-rp">
+        <div class="ptabs">
+          <button class="ptab on" onclick="vtab('trim')">Trim/Cut</button>
+          <button class="ptab" onclick="vtab('crop')">Crop</button>
+          <button class="ptab" onclick="vtab('fx')">FX</button>
+          <button class="ptab" onclick="vtab('caps')">Captions</button>
+        </div>
+        <div class="vpbody pbody">
+          <!-- TRIM -->
+          <div id="vt-trim">
+            <div class="psec">
+              <div class="plbl">Trim Range</div>
+              <div class="pr"><label>In (s)</label><input class="pi" id="t-in" type="number" min="0" step=".1" value="0" onchange="setTI(+this.value)"></div>
+              <div class="pr"><label>Out (s)</label><input class="pi" id="t-out" type="number" min="0" step=".1" value="0" onchange="setTO(+this.value)"></div>
+              <div class="pr"><label>Duration</label><span id="t-dur" style="font-family:var(--mono);font-size:11px;color:var(--c2);">—</span></div>
+              <button class="sbtn" style="width:100%;margin-bottom:3px;" onclick="setTI(document.getElementById('vid').currentTime)">▸ Mark In Here</button>
+              <button class="sbtn" style="width:100%;margin-bottom:3px;" onclick="setTO(document.getElementById('vid').currentTime)">▸ Mark Out Here</button>
+              <button class="sbtn" style="width:100%;" onclick="resetTrim()">↺ Reset Trim</button>
+            </div>
+            <div class="psec">
+              <div class="plbl">Export Settings</div>
+              <div class="pr"><label>Format</label>
+                <select class="psel" id="exp-fmt">
+                  <option value="webm">WebM (best compat.)</option>
+                  <option value="mp4">MP4 (if supported)</option>
+                </select>
+              </div>
+              <div class="pr"><label>Quality</label>
+                <select class="psel" id="exp-q">
+                  <option value="5000000">Ultra (5 Mbps)</option>
+                  <option value="2500000" selected>High (2.5 Mbps)</option>
+                  <option value="1000000">Medium (1 Mbps)</option>
+                  <option value="500000">Low (500 kbps)</option>
+                </select>
+              </div>
+              <button class="top-btn teal" style="width:100%;height:32px;margin-top:6px;justify-content:center;" onclick="doExportVideo()">⬇ Export Trimmed Video</button>
+            </div>
+          </div>
+          <!-- CROP -->
+          <div id="vt-crop" style="display:none;">
+            <div class="psec">
+              <div class="plbl">Crop Region</div>
+              <button class="sbtn" id="crop-toggle" style="width:100%;margin-bottom:8px;" onclick="toggleCrop()">Enable Crop</button>
+              <div class="pr"><label>X</label><input class="pi" id="cx" type="number" value="0" onchange="setCropFromInputs()"></div>
+              <div class="pr"><label>Y</label><input class="pi" id="cy" type="number" value="0" onchange="setCropFromInputs()"></div>
+              <div class="pr"><label>Width</label><input class="pi" id="cw" type="number" value="1280" onchange="setCropFromInputs()"></div>
+              <div class="pr"><label>Height</label><input class="pi" id="ch2" type="number" value="720" onchange="setCropFromInputs()"></div>
+              <div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:6px;">
+                <button class="sbtn" style="width:auto;padding:0 8px;" onclick="cropPreset('16:9')">16:9</button>
+                <button class="sbtn" style="width:auto;padding:0 8px;" onclick="cropPreset('1:1')">1:1</button>
+                <button class="sbtn" style="width:auto;padding:0 8px;" onclick="cropPreset('9:16')">9:16</button>
+                <button class="sbtn" style="width:auto;padding:0 8px;" onclick="cropPreset('4:3')">4:3</button>
+                <button class="sbtn" style="width:auto;padding:0 8px;" onclick="cropPreset('21:9')">21:9</button>
+              </div>
+              <button class="sbtn" style="width:100%;margin-top:5px;" onclick="resetCrop()">↺ Reset Crop</button>
+            </div>
+          </div>
+          <!-- FX -->
+          <div id="vt-fx" style="display:none;">
+            <div class="psec">
+              <div class="plbl">Video Effects</div>
+              <div class="vs-row"><label>Brightness</label><input type="range" id="vf-br" min="0" max="200" value="100" oninput="applyVFX()"><span class="vv" id="vfv-br">100</span></div>
+              <div class="vs-row"><label>Contrast</label><input type="range" id="vf-co" min="0" max="200" value="100" oninput="applyVFX()"><span class="vv" id="vfv-co">100</span></div>
+              <div class="vs-row"><label>Saturation</label><input type="range" id="vf-sa" min="0" max="200" value="100" oninput="applyVFX()"><span class="vv" id="vfv-sa">100</span></div>
+              <div class="vs-row"><label>Hue Rotate</label><input type="range" id="vf-hu" min="0" max="360" value="0" oninput="applyVFX()"><span class="vv" id="vfv-hu">0°</span></div>
+              <div class="vs-row"><label>Blur</label><input type="range" id="vf-bl" min="0" max="20" value="0" step=".5" oninput="applyVFX()"><span class="vv" id="vfv-bl">0px</span></div>
+              <div class="vs-row"><label>Sepia</label><input type="range" id="vf-se" min="0" max="100" value="0" oninput="applyVFX()"><span class="vv" id="vfv-se">0%</span></div>
+              <div class="vs-row"><label>Grayscale</label><input type="range" id="vf-gr" min="0" max="100" value="0" oninput="applyVFX()"><span class="vv" id="vfv-gr">0%</span></div>
+              <div class="vs-row"><label>Invert</label><input type="range" id="vf-in" min="0" max="100" value="0" oninput="applyVFX()"><span class="vv" id="vfv-in">0%</span></div>
+              <button class="sbtn" style="width:100%;margin-top:6px;" onclick="resetVFX()">↺ Reset All FX</button>
+            </div>
+            <div class="psec">
+              <div class="plbl">Presets</div>
+              <div style="display:flex;gap:3px;flex-wrap:wrap;">
+                <button class="sbtn" style="width:auto;padding:0 9px;" onclick="vfxPreset('vivid')">Vivid</button>
+                <button class="sbtn" style="width:auto;padding:0 9px;" onclick="vfxPreset('cool')">Cool</button>
+                <button class="sbtn" style="width:auto;padding:0 9px;" onclick="vfxPreset('warm')">Warm</button>
+                <button class="sbtn" style="width:auto;padding:0 9px;" onclick="vfxPreset('bw')">B&W</button>
+                <button class="sbtn" style="width:auto;padding:0 9px;" onclick="vfxPreset('sepia')">Sepia</button>
+                <button class="sbtn" style="width:auto;padding:0 9px;" onclick="vfxPreset('neon')">Neon</button>
+                <button class="sbtn" style="width:auto;padding:0 9px;" onclick="vfxPreset('cinematic')">Cinematic</button>
+              </div>
+            </div>
+          </div>
+          <!-- CAPTIONS -->
+          <div id="vt-caps" style="display:none;">
+            <div style="padding:7px;border-bottom:1px solid var(--b1);display:flex;align-items:center;gap:5px;">
+              <span style="font-size:11px;font-weight:600;flex:1;">Captions</span>
+              <button class="sbtn" style="width:auto;padding:0 8px;" onclick="openModal('stt-modal')">+ Transcribe</button>
+              <button class="sbtn" style="width:auto;padding:0 8px;" onclick="translateCaps()">Translate</button>
+            </div>
+            <div class="psec">
+              <div class="plbl">Caption Style</div>
+              <div class="pr"><label>Style</label>
+                <select class="psel" id="cap-style-sel" onchange="vs.capStyle=this.value">
+                  <option value="default">White on Dark</option>
+                  <option value="yellow">Bold Yellow</option>
+                  <option value="outline">Text Outline</option>
+                  <option value="minimal">Minimal Blur</option>
+                  <option value="subtitles">Subtitle Bar</option>
+                </select>
+              </div>
+              <div class="pr"><label>Position</label>
+                <select class="psel" id="cap-pos-sel" onchange="vs.capPos=this.value">
+                  <option value="bottom">Bottom</option>
+                  <option value="top">Top</option>
+                  <option value="center">Center</option>
+                </select>
+              </div>
+              <div class="pr"><label>Size</label><input class="pi" id="cap-size" type="number" min="10" max="48" value="18" onchange="vs.capSize=+this.value"></div>
+            </div>
+            <div id="cap-list"></div>
+          </div>
+        </div>
+        <!-- AI Bar (video) -->
+        <div id="aibar" style="height:var(--aiH);">
+          <span class="ailbl">AI</span><div class="aisep"></div>
+          <button class="aibtn" onclick="openModal('stt-modal')"><span class="pip r"></span> Transcribe</button>
+          <button class="aibtn" onclick="translateCaps()"><span class="pip y"></span> Translate Caps</button>
+          <button class="aibtn" onclick="openModal('tts-modal')"><span class="pip t"></span> Text→Speech</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toasts"></div>
+
+<!-- EXPORT OVERLAY -->
+<div id="export-overlay">
+  <div id="export-ring"></div>
+  <div class="etitle">Exporting Video</div>
+  <div id="export-pct">0%</div>
+  <div class="esub" id="export-sub">Rendering frames…</div>
+  <div class="etip">Don't close this tab</div>
+</div>
+
+<!-- HIDDEN INPUTS -->
+<input type="file" id="img-input" accept="image/*" style="display:none" onchange="handleImg(event)">
+<input type="file" id="vid-input" accept="video/*" style="display:none" onchange="handleVid(event)">
+<input type="file" id="audio-input" accept="audio/*,video/*" style="display:none" onchange="handleAudio(event)">
+
+<!-- ====== MODALS ====== -->
+<!-- API Keys -->
+<div class="moverlay" id="api-modal">
+  <div class="mbox">
+    <div class="mhd">
+      <div><div class="mtitle">⚡ API Keys <span class="mbadge">VERCEL + FALLBACK</span></div>
+      <div class="msub" style="margin-top:6px;">On Vercel: add <code>GROQ_KEY_1</code>, <code>GROQ_KEY_2</code>, <code>GROQ_KEY_3</code> in Project → Settings → Environment Variables. Keys rotate automatically on rate limit. For local dev, enter a fallback key below.</div></div>
+      <button class="mclose" onclick="closeModal('api-modal')">✕</button>
+    </div>
+    <div id="api-check" style="padding:9px;border-radius:var(--r);border:1px solid var(--b2);background:var(--bg3);margin-bottom:12px;font-size:11.5px;color:var(--txt2);">Checking Vercel API…</div>
+    <div class="mf"><label>Fallback Groq API Key (for local dev only)</label><input type="password" id="fkey" placeholder="gsk_…" autocomplete="off"></div>
+    <div style="font-size:10.5px;color:var(--txt3);margin-bottom:10px;">Free keys at <a href="https://console.groq.com" target="_blank">console.groq.com</a> — key stays in your browser localStorage.</div>
+    <div class="mrow">
+      <button class="mb" onclick="closeModal('api-modal')">Cancel</button>
+      <button class="mb y" onclick="saveFKey()">Save Fallback Key</button>
+    </div>
+  </div>
+</div>
+
+<!-- AI Write -->
+<div class="moverlay" id="ai-write-modal">
+  <div class="mbox" style="width:560px;">
+    <div class="mhd">
+      <div><div class="mtitle">✦ AI Writing Tools <span class="mbadge">GROQ LLM</span></div></div>
+      <button class="mclose" onclick="closeModal('ai-write-modal')">✕</button>
+    </div>
+    <div class="mtabs">
+      <button class="mtab on" onclick="mTab('write','gen')">Generate</button>
+      <button class="mtab" onclick="mTab('write','fix')">Fix Grammar</button>
+      <button class="mtab" onclick="mTab('write','expand')">Expand</button>
+      <button class="mtab" onclick="mTab('write','shorten')">Shorten</button>
+      <button class="mtab" onclick="mTab('write','rephrase')">Rephrase</button>
+      <button class="mtab" onclick="mTab('write','translate')">Translate</button>
+    </div>
+    <div id="mt-write-gen" class="mtp on">
+      <div class="mf"><label>Describe what you need (be specific)</label><textarea id="gen-prompt" placeholder="e.g. A bold headline for a streetwear brand targeting Gen Z. 5-7 words. Edgy tone."></textarea></div>
+      <div class="mf"><label>Tone</label>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;">
+          <button class="aqb on" id="tone-Professional" onclick="selTone(this,'Professional')">Professional</button>
+          <button class="aqb" id="tone-Bold" onclick="selTone(this,'Bold')">Bold</button>
+          <button class="aqb" id="tone-Casual" onclick="selTone(this,'Casual')">Casual</button>
+          <button class="aqb" id="tone-Creative" onclick="selTone(this,'Creative')">Creative</button>
+          <button class="aqb" id="tone-Luxury" onclick="selTone(this,'Luxury')">Luxury</button>
+          <button class="aqb" id="tone-Minimal" onclick="selTone(this,'Minimal')">Minimal</button>
+          <button class="aqb" id="tone-Funny" onclick="selTone(this,'Funny')">Funny</button>
+        </div>
+      </div>
+    </div>
+    <div id="mt-write-fix" class="mtp"><div class="mf"><label>Text to fix</label><textarea id="fix-txt" placeholder="Paste text with grammar errors…"></textarea></div></div>
+    <div id="mt-write-expand" class="mtp"><div class="mf"><label>Text to expand</label><textarea id="exp-txt" placeholder="Short text to expand…"></textarea></div></div>
+    <div id="mt-write-shorten" class="mtp"><div class="mf"><label>Text to shorten</label><textarea id="short-txt" placeholder="Long text to condense…"></textarea></div></div>
+    <div id="mt-write-rephrase" class="mtp"><div class="mf"><label>Text to rephrase</label><textarea id="reph-txt" placeholder="Text to rewrite…"></textarea></div></div>
+    <div id="mt-write-translate" class="mtp">
+      <div class="mf"><label>Text to translate</label><textarea id="trans-txt" placeholder="Text to translate…"></textarea></div>
+      <div class="mf"><label>Target language</label><input type="text" id="trans-lang" placeholder="e.g. Spanish, French, Japanese…"></div>
+    </div>
+    <div class="prog" id="write-prog"><div class="progfill"></div></div>
+    <div class="rbox" id="write-res"></div>
+    <div class="ract" id="write-acts">
+      <button onclick="addToCanvas($('write-res').textContent)">➕ Add to Canvas</button>
+      <button onclick="copyTxt($('write-res').textContent)">⎘ Copy</button>
+      <button onclick="runWrite()">↺ Redo</button>
+    </div>
+    <div class="mrow">
+      <button class="mb" onclick="closeModal('ai-write-modal')">Close</button>
+      <button class="mb y" onclick="runWrite()">✦ Run AI</button>
+    </div>
+  </div>
+</div>
+
+<!-- TTS -->
+<div class="moverlay" id="tts-modal">
+  <div class="mbox" style="width:540px;">
+    <div class="mhd">
+      <div><div class="mtitle">🔊 Text → Speech <span class="mbadge t">PLAYAI TTS</span></div>
+      <div class="msub" style="margin-top:5px;">Generate natural speech from text with Groq's PlayAI voices. Download as MP3.</div></div>
+      <button class="mclose" onclick="closeModal('tts-modal')">✕</button>
+    </div>
+    <div class="mf">
+      <label>Text <span id="tts-cc" style="color:var(--txt3);">0 / 4096</span></label>
+      <textarea id="tts-txt" placeholder="Enter text to speak…" style="min-height:88px;" oninput="$('tts-cc').textContent=this.value.length+' / 4096'"></textarea>
+    </div>
+    <div class="mf">
+      <label>Voice</label>
+      <div class="vgrid">
+        <div class="vopt on" data-v="Fritz-PlayAI" onclick="selV(this)"><div class="vn">Fritz</div><div class="vt">Male · Deep</div></div>
+        <div class="vopt" data-v="Arista-PlayAI" onclick="selV(this)"><div class="vn">Arista</div><div class="vt">Female · Clear</div></div>
+        <div class="vopt" data-v="Atlas-PlayAI" onclick="selV(this)"><div class="vn">Atlas</div><div class="vt">Male · Natural</div></div>
+        <div class="vopt" data-v="Basil-PlayAI" onclick="selV(this)"><div class="vn">Basil</div><div class="vt">Male · Warm</div></div>
+        <div class="vopt" data-v="Briggs-PlayAI" onclick="selV(this)"><div class="vn">Briggs</div><div class="vt">Male · Strong</div></div>
+        <div class="vopt" data-v="Calista-PlayAI" onclick="selV(this)"><div class="vn">Calista</div><div class="vt">Female · Bright</div></div>
+        <div class="vopt" data-v="Celeste-PlayAI" onclick="selV(this)"><div class="vn">Celeste</div><div class="vt">Female · Soft</div></div>
+        <div class="vopt" data-v="Chip-PlayAI" onclick="selV(this)"><div class="vn">Chip</div><div class="vt">Male · Young</div></div>
+        <div class="vopt" data-v="Mitch-PlayAI" onclick="selV(this)"><div class="vn">Mitch</div><div class="vt">Male · Low</div></div>
+      </div>
+    </div>
+    <div class="mf"><label>Speed: <span id="spd-lbl">1.0×</span></label><input type="range" id="tts-spd" min=".5" max="2" step=".1" value="1" oninput="$('spd-lbl').textContent=this.value+'×'"></div>
+    <div class="prog" id="tts-prog"><div class="progfill"></div></div>
+    <audio class="maudio" id="tts-audio" controls></audio>
+    <div id="tts-dl" style="display:none;margin-top:8px;"><button class="mb t" style="width:100%;" onclick="dlTTS()">⬇ Download MP3</button></div>
+    <div class="mrow">
+      <button class="mb" onclick="closeModal('tts-modal')">Close</button>
+      <button class="mb t" onclick="runTTS()">🔊 Generate</button>
+    </div>
+  </div>
+</div>
+
+<!-- STT / Transcribe -->
+<div class="moverlay" id="stt-modal">
+  <div class="mbox">
+    <div class="mhd">
+      <div><div class="mtitle">🎤 Speech → Captions <span class="mbadge r">WHISPER v3</span></div>
+      <div class="msub" style="margin-top:5px;">Upload audio or video to generate timestamped captions with Groq Whisper.</div></div>
+      <button class="mclose" onclick="closeModal('stt-modal')">✕</button>
+    </div>
+    <div id="stt-drop" style="border:2px dashed var(--b2);border-radius:var(--r);padding:18px;text-align:center;cursor:pointer;margin-bottom:12px;transition:border .15s;" onclick="$('audio-input').click()">
+      <div style="font-size:22px;margin-bottom:6px;">🎵</div>
+      <div style="font-size:12.5px;font-weight:600;">Click to upload audio or video</div>
+      <div style="font-size:11px;color:var(--txt3);margin-top:3px;">MP3 · WAV · M4A · MP4 · WebM · max 25 MB</div>
+      <div id="stt-fn" style="font-size:11px;color:var(--c1);margin-top:5px;font-family:var(--mono);"></div>
+    </div>
+    <div class="mf"><label>Language (optional — auto-detect if blank)</label>
+      <select id="stt-lang">
+        <option value="">Auto-detect</option>
+        <option value="en">English</option><option value="es">Spanish</option><option value="fr">French</option>
+        <option value="de">German</option><option value="ja">Japanese</option><option value="zh">Chinese (Mandarin)</option>
+        <option value="pt">Portuguese</option><option value="ar">Arabic</option><option value="ko">Korean</option>
+        <option value="it">Italian</option><option value="ru">Russian</option><option value="hi">Hindi</option>
+      </select>
+    </div>
+    <div class="prog" id="stt-prog"><div class="progfill"></div></div>
+    <div class="rbox" id="stt-res"></div>
+    <div class="ract" id="stt-acts">
+      <button onclick="loadCaps()">➕ Load as Captions</button>
+      <button onclick="addToCanvas($('stt-res').textContent)">Add to Canvas</button>
+      <button onclick="copyTxt($('stt-res').textContent)">⎘ Copy</button>
+    </div>
+    <div class="mrow">
+      <button class="mb" onclick="closeModal('stt-modal')">Close</button>
+      <button class="mb r" onclick="runSTT()">🎤 Transcribe</button>
+    </div>
+  </div>
+</div>
+
+<!-- AI Background -->
+<div class="moverlay" id="ai-bg-modal">
+  <div class="mbox">
+    <div class="mhd">
+      <div><div class="mtitle">🎨 AI Background <span class="mbadge">GROQ LLM</span></div>
+      <div class="msub" style="margin-top:5px;">Describe a background — AI generates a CSS gradient and applies it to your canvas.</div></div>
+      <button class="mclose" onclick="closeModal('ai-bg-modal')">✕</button>
+    </div>
+    <div class="mf"><label>Describe the background</label><textarea id="bg-prompt" placeholder="e.g. Deep ocean at night, dark teal to black. Or: Warm sunrise, orange and gold. Or: Minimal matte dark with grain."></textarea></div>
+    <div class="prog" id="bg-prog"><div class="progfill"></div></div>
+    <div id="bg-preview" style="height:64px;border-radius:var(--r);border:1px solid var(--b1);margin-top:8px;display:none;"></div>
+    <div class="mrow">
+      <button class="mb" onclick="closeModal('ai-bg-modal')">Close</button>
+      <button class="mb y" onclick="runBG()">🎨 Generate</button>
+    </div>
+  </div>
+</div>
+
+<!-- Color Palette -->
+<div class="moverlay" id="pal-modal">
+  <div class="mbox">
+    <div class="mhd">
+      <div><div class="mtitle">✦ AI Color Palette <span class="mbadge t">GROQ LLM</span></div>
+      <div class="msub" style="margin-top:5px;">Describe a vibe or brand and get a 5-color palette. Click any swatch to apply to selected object.</div></div>
+      <button class="mclose" onclick="closeModal('pal-modal')">✕</button>
+    </div>
+    <div class="mf"><label>Describe the palette</label><textarea id="pal-prompt" placeholder="e.g. Luxury fintech brand — deep navy, gold accents, clean white. Or: Playful kids app, bright pastels."></textarea></div>
+    <div class="prog" id="pal-prog"><div class="progfill"></div></div>
+    <div id="pal-result" style="display:none;">
+      <div class="palbox" id="pal-swatches"></div>
+      <div style="font-size:11.5px;color:var(--txt2);margin-top:10px;line-height:1.5;" id="pal-desc"></div>
+    </div>
+    <div class="mrow">
+      <button class="mb" onclick="closeModal('pal-modal')">Close</button>
+      <button class="mb t" onclick="runPalette()">✦ Generate</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════════════════════════════════
+const $ = id => document.getElementById(id);
+const v = el => el.value;
+function toast(msg, type='', dur=3000) {
+  const el = document.createElement('div');
+  el.className = 'toast' + (type ? ' ' + type : '');
+  el.textContent = msg;
+  $('toasts').appendChild(el);
+  setTimeout(() => { el.style.opacity='0'; el.style.transition='opacity .3s'; setTimeout(()=>el.remove(),320); }, dur);
+}
+function showP(id){ $(id).classList.add('open'); }
+function hideP(id){ $(id).classList.remove('open'); }
+function openModal(id){ $(id).classList.add('open'); }
+function closeModal(id){ $(id).classList.remove('open'); }
+function dlBlob(blob, name){ const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; a.click(); }
+function dlText(txt, name){ dlBlob(new Blob([txt],{type:'text/plain'}), name); }
+function copyTxt(t){ navigator.clipboard.writeText(t).then(()=>toast('Copied!','ok')).catch(()=>toast('Copy failed','err')); }
+function pad2(n){ return String(Math.floor(n)).padStart(2,'0'); }
+function fmtT(s){ if(isNaN(s)||s<0)return'0:00'; const m=Math.floor(s/60); return `${m}:${pad2(s%60)}`; }
+function toSRTt(s){ const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=Math.floor(s%60),ms=Math.round((s%1)*1000); return `${pad2(h)}:${pad2(m)}:${pad2(sec)},${String(ms).padStart(3,'0')}`; }
+
+// Close modal on backdrop click
+document.querySelectorAll('.moverlay').forEach(m=>m.addEventListener('click',e=>{ if(e.target===m) m.classList.remove('open'); }));
+
+// ══════════════════════════════════════════════════════════════
+//  API PROXY w/ KEY ROTATION
+// ══════════════════════════════════════════════════════════════
+const G = {
+  fkey: localStorage.getItem('nova_fkey') || '',
+  vercelOk: null,
+  voice: 'Fritz-PlayAI',
+  tone: 'Professional',
+  writeTab: 'gen',
+  ttsBlob: null,
+  rawSegs: [],
+};
+
+async function checkVercel() {
+  try {
+    const r = await fetch('/api/chat', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({messages:[{role:'user',content:'hi'}], max_tokens:2}),
+      signal: AbortSignal.timeout(4000)
+    });
+    G.vercelOk = (r.ok || r.status !== 404);
+  } catch { G.vercelOk = false; }
+  const dot = $('apidot'), lbl = $('api-lbl');
+  const chk = $('api-check');
+  if (G.vercelOk) {
+    dot.className='ok'; lbl.textContent='Vercel OK';
+    if(chk) chk.textContent='✅ Vercel API active — keys are configured on server.';
+  } else if (G.fkey) {
+    dot.className='warn'; lbl.textContent='Fallback Key';
+    if(chk) chk.textContent='⚠ Vercel API not found. Using fallback key (local mode).';
+  } else {
+    lbl.textContent='No API';
+    if(chk) chk.textContent='⚠ No Vercel API or fallback key. Set one to use AI features.';
+  }
+}
+
+async function callChat(system, user, maxT=1000) {
+  const body = { system, messages:[{role:'user',content:user}], max_tokens:maxT };
+  const h = {'Content-Type':'application/json'};
+  if (G.vercelOk !== false) {
+    try {
+      const r = await fetch('/api/chat',{method:'POST',headers:h,body:JSON.stringify(body)});
+      if(r.ok){ const d=await r.json(); if(d.choices) return d.choices[0].message.content; if(d.error) throw new Error(d.error); }
+    } catch(e){ if(!G.fkey) throw e; }
+  }
+  if (!G.fkey) throw new Error('No API key. Click ⚙ Keys button to add a fallback key.');
+  const r = await fetch('https://api.groq.com/openai/v1/chat/completions',{
+    method:'POST',
+    headers:{...h,'Authorization':`Bearer ${G.fkey}`},
+    body: JSON.stringify({model:'llama-3.3-70b-versatile',max_tokens:maxT,
+      messages:system?[{role:'system',content:system},{role:'user',content:user}]:[{role:'user',content:user}]})
+  });
+  if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error?.message||`Error ${r.status}`);}
+  return (await r.json()).choices[0].message.content;
+}
+
+async function callTTS(text, voice, speed) {
+  const body = {text,voice,speed};
+  const h = {'Content-Type':'application/json'};
+  if (G.vercelOk !== false) {
+    try { const r=await fetch('/api/tts',{method:'POST',headers:h,body:JSON.stringify(body)}); if(r.ok) return await r.blob(); } catch(e){if(!G.fkey)throw e;}
+  }
+  if (!G.fkey) throw new Error('No API key configured.');
+  const r = await fetch('https://api.groq.com/openai/v1/audio/speech',{
+    method:'POST',headers:{...h,'Authorization':`Bearer ${G.fkey}`},
+    body:JSON.stringify({model:'playai-tts',input:text.slice(0,4096),voice,speed,response_format:'mp3'})
+  });
+  if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error?.message||`TTS error ${r.status}`);}
+  return await r.blob();
+}
+
+async function callSTT(fd) {
+  if (G.vercelOk !== false) {
+    try { const r=await fetch('/api/transcribe',{method:'POST',body:fd}); if(r.ok) return await r.json(); } catch(e){if(!G.fkey)throw e;}
+  }
+  if (!G.fkey) throw new Error('No API key configured.');
+  const r = await fetch('https://api.groq.com/openai/v1/audio/transcriptions',{
+    method:'POST',headers:{'Authorization':`Bearer ${G.fkey}`},body:fd
+  });
+  if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error?.message||`Error ${r.status}`);}
+  return await r.json();
+}
+
+function saveFKey() {
+  const k = $('fkey').value.trim();
+  if(!k){toast('Enter a key','err');return;}
+  G.fkey = k; localStorage.setItem('nova_fkey', k);
+  $('apidot').className='warn'; $('api-lbl').textContent='Fallback Key';
+  closeModal('api-modal'); toast('Fallback key saved!','ok');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  CANVAS / FABRIC
+// ══════════════════════════════════════════════════════════════
+let cnv, cW=1280, cH=720, zoom=1, histStack=[], histIdx=-1;
+
+function initCanvas() {
+  cnv = new fabric.Canvas('mc', { width:cW, height:cH, backgroundColor:'#ffffff', selection:true, preserveObjectStacking:true });
+  updateZoom(); updateZoomLbl();
+  cnv.on('selection:created', onSel);
+  cnv.on('selection:updated', onSel);
+  cnv.on('selection:cleared', ()=>{ $('no-sel').style.display='flex'; $('sel-props').style.display='none'; });
+  cnv.on('object:modified', ()=>{ saveH(); refreshLayers(); });
+  cnv.on('object:added', ()=>{ saveH(); refreshLayers(); });
+  cnv.on('object:removed', ()=>{ refreshLayers(); });
+  document.addEventListener('keydown', onKey);
+  window.addEventListener('resize', ()=>{ updateZoom(); updateZoomLbl(); });
+  saveH();
+  // Welcome objects
+  const txt = new fabric.Textbox('Welcome to NOVA', { left:cW/2-250,top:cH/2-70,width:500,fontSize:72,fontFamily:'Syne',fontWeight:'800',textAlign:'center',fill:'#07080f',editable:true });
+  const sub = new fabric.Textbox('AI Creative Suite', { left:cW/2-200,top:cH/2+30,width:400,fontSize:22,fontFamily:'Space Grotesk',fontWeight:'300',textAlign:'center',fill:'#888',charSpacing:80,editable:true });
+  cnv.add(txt,sub); cnv.renderAll(); saveH();
+}
+
+function updateZoom() {
+  const wrap = $('cnv-wrap'); if(!wrap) return;
+  const p=50, sw=Math.min((wrap.clientWidth-p)/cW,(wrap.clientHeight-p)/cH,1)*zoom;
+  const s=$('cnv-shadow'); s.style.transform=`scale(${sw})`; s.style.transformOrigin='center center'; s.style.width=cW+'px'; s.style.height=cH+'px';
+}
+function updateZoomLbl() {
+  const wrap=$('cnv-wrap'); if(!wrap) return;
+  const p=50, sw=Math.min((wrap.clientWidth-p)/cW,(wrap.clientHeight-p)/cH,1);
+  $('zlbl').textContent=Math.round(sw*zoom*100)+'%';
+}
+function zIn(){zoom=Math.min(zoom*1.25,6);updateZoom();updateZoomLbl();}
+function zOut(){zoom=Math.max(zoom/1.25,.08);updateZoom();updateZoomLbl();}
+function zFit(){zoom=1;updateZoom();updateZoomLbl();}
+
+function setSize(w,h) { cW=w;cH=h;cnv.setDimensions({width:w,height:h});cnv.renderAll();$('cnv-size-lbl').textContent=`${w}×${h}`;updateZoom();updateZoomLbl(); }
+function customSize() { const s=prompt('Enter size WxH (e.g. 800x600):','800x600'); if(!s)return; const [w,h]=s.split(/x/i).map(Number); if(w>0&&h>0) setSize(w,h); }
+
+function setTool(t) {
+  cnv.isDrawingMode = (t==='draw');
+  if(t==='draw'){cnv.freeDrawingBrush.width=3;cnv.freeDrawingBrush.color='#000000';}
+  document.querySelectorAll('.tbtn').forEach(b=>b.classList.remove('on'));
+  const btn=$('t-'+t); if(btn) btn.classList.add('on');
+  if(t==='text') addText();
+}
+
+function addText(txt='Your text here',opts={}) {
+  const defaults={left:cW/2-200,top:cH/2-40,width:400,fontSize:52,fontFamily:'Syne',fontWeight:'700',textAlign:'center',fill:'#000000',editable:true};
+  const o=new fabric.Textbox(txt,{...defaults,...opts});
+  cnv.add(o); cnv.setActiveObject(o); cnv.renderAll(); setTool('select'); return o;
+}
+function addToCanvas(txt, opts={}) {
+  if(!txt?.trim()) return;
+  addText(txt.trim(),{left:60,top:60,width:cW-120,fontSize:36,fontWeight:'600',...opts});
+  toast('Text added to canvas','ok');
+}
+
+function addShape(type) {
+  const cx=cW/2,cy=cH/2; let o;
+  if(type==='rect') o=new fabric.Rect({left:cx-90,top:cy-55,width:180,height:110,fill:'#4f46e5',rx:6,ry:6});
+  else if(type==='circle') o=new fabric.Circle({left:cx-65,top:cy-65,radius:65,fill:'#10b981'});
+  else if(type==='triangle') o=new fabric.Triangle({left:cx-75,top:cy-65,width:150,height:130,fill:'#f59e0b'});
+  else if(type==='star') {
+    const pts=[],r1=70,r2=30; for(let i=0;i<10;i++){const r=i%2===0?r1:r2,a=(Math.PI/5)*i-Math.PI/2;pts.push({x:Math.cos(a)*r,y:Math.sin(a)*r});}
+    o=new fabric.Polygon(pts,{left:cx-70,top:cy-70,fill:'#f59e0b'});
+  }
+  else if(type==='arrow') {
+    const pts=[{x:0,y:20},{x:60,y:20},{x:60,y:0},{x:100,y:35},{x:60,y:70},{x:60,y:50},{x:0,y:50}];
+    o=new fabric.Polygon(pts,{left:cx-50,top:cy-35,fill:'#ef4444'});
+  }
+  else if(type==='line') o=new fabric.Line([cx-90,cy,cx+90,cy],{stroke:'#000',strokeWidth:3});
+  if(o){cnv.add(o);cnv.setActiveObject(o);cnv.renderAll();}
+}
+
+function handleImg(e){
+  const f=e.target.files[0]; if(!f)return;
+  const rdr=new FileReader();
+  rdr.onload=ev=>{ fabric.Image.fromURL(ev.target.result,img=>{
+    const sc=Math.min(cW*.7/img.width,cH*.7/img.height);
+    img.set({left:cW/2-img.width*sc/2,top:cH/2-img.height*sc/2,scaleX:sc,scaleY:sc});
+    cnv.add(img);cnv.setActiveObject(img);cnv.renderAll();saveH();
+  });};
+  rdr.readAsDataURL(f); e.target.value='';
+}
+
+function setBg(c) { cnv.setBackgroundColor(c,cnv.renderAll.bind(cnv)); $('bg-c').value=c; saveH(); }
+
+function delSel(){
+  const o=cnv.getActiveObject(); if(!o) return;
+  if(o.type==='activeSelection') o.forEachObject(x=>cnv.remove(x));
+  else cnv.remove(o);
+  cnv.discardActiveObject(); cnv.renderAll();
+}
+function dupSel(){ const o=cnv.getActiveObject(); if(!o) return; o.clone(c=>{c.set({left:o.left+20,top:o.top+20});cnv.add(c);cnv.setActiveObject(c);cnv.renderAll();saveH();}); }
+function bringFwd(){ const o=cnv.getActiveObject(); if(o){cnv.bringForward(o);cnv.renderAll();} }
+function sendBwd(){ const o=cnv.getActiveObject(); if(o){cnv.sendBackwards(o);cnv.renderAll();} }
+function flipH(){ const o=cnv.getActiveObject(); if(o){o.set('flipX',!o.flipX);cnv.renderAll();} }
+function flipV(){ const o=cnv.getActiveObject(); if(o){o.set('flipY',!o.flipY);cnv.renderAll();} }
+function groupSel(){
+  const o=cnv.getActiveObject();
+  if(!o||o.type!=='activeSelection') return;
+  const g=o.toGroup(); cnv.setActiveObject(g); cnv.renderAll();
+}
+function ungroupSel(){
+  const o=cnv.getActiveObject();
+  if(!o||o.type!=='group') return;
+  const objs=o.toActiveSelection(); cnv.setActiveObject(objs); cnv.renderAll();
+}
+
+function align(dir) {
+  const o=cnv.getActiveObject(); if(!o) return;
+  const b=o.getBoundingRect();
+  if(dir==='left') o.set('left',0);
+  else if(dir==='cx') o.set('left',(cW-b.width)/2);
+  else if(dir==='right') o.set('left',cW-b.width);
+  else if(dir==='top') o.set('top',0);
+  else if(dir==='cy') o.set('top',(cH-b.height)/2);
+  else if(dir==='bottom') o.set('top',cH-b.height);
+  o.setCoords(); cnv.renderAll(); saveH();
+}
+
+function onKey(e) {
+  if(['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)) return;
+  if(e.key==='Delete'||e.key==='Backspace') delSel();
+  if((e.ctrlKey||e.metaKey)&&e.key==='z'){e.preventDefault();undo();}
+  if((e.ctrlKey||e.metaKey)&&e.key==='y'){e.preventDefault();redo();}
+  if((e.ctrlKey||e.metaKey)&&e.key==='d'){e.preventDefault();dupSel();}
+  if(e.key==='Escape') cnv.discardActiveObject();
+}
+
+// History
+function saveH(){
+  const s=JSON.stringify(cnv.toJSON());
+  if(histIdx<histStack.length-1) histStack=histStack.slice(0,histIdx+1);
+  histStack.push(s); if(histStack.length>50) histStack.shift();
+  histIdx=histStack.length-1; updateHistPanel();
+}
+function undo(){ if(histIdx>0){histIdx--;cnv.loadFromJSON(histStack[histIdx],()=>{cnv.renderAll();refreshLayers();});} }
+function redo(){ if(histIdx<histStack.length-1){histIdx++;cnv.loadFromJSON(histStack[histIdx],()=>{cnv.renderAll();refreshLayers();});} }
+
+function updateHistPanel() {
+  const el=$('hist-list'); if(!el) return;
+  el.innerHTML=histStack.map((s,i)=>`<button class="sbtn${i===histIdx?' on':''}" style="width:100%;${i===histIdx?'color:var(--c1);':''}" onclick="jumpHist(${i})">State ${i+1}${i===histIdx?' ◀':''}</button>`).join('');
+}
+function jumpHist(i){ histIdx=i; cnv.loadFromJSON(histStack[i],()=>{cnv.renderAll();refreshLayers();}); }
+
+// Props panel
+function onSel() {
+  $('no-sel').style.display='none'; $('sel-props').style.display='block';
+  updateProps(); refreshLayers();
+}
+function updateProps() {
+  const o=cnv.getActiveObject(); if(!o) return;
+  const b=o.getBoundingRect();
+  $('px').value=Math.round(o.left||0);
+  $('py').value=Math.round(o.top||0);
+  $('pw').value=Math.round(b.width||0);
+  $('ph').value=Math.round(b.height||0);
+  $('prot').value=Math.round(o.angle||0);
+  $('pop').value=(o.opacity!=null?o.opacity:1).toFixed(2);
+  const fill=typeof o.fill==='string'&&o.fill.startsWith('#')?o.fill:'#000000';
+  $('pfill').value=fill;
+  const strk=o.stroke&&o.stroke.startsWith('#')?o.stroke:'#000000';
+  $('pstroke').value=strk; $('psw').value=o.strokeWidth||0;
+  const isTxt=['textbox','text','i-text'].includes(o.type);
+  const isImg=o.type==='image';
+  const isRect=o.type==='rect';
+  $('text-panel').style.display=isTxt?'block':'none';
+  $('img-panel').style.display=isImg?'block':'none';
+  $('rx-row').style.display=isRect?'flex':'none';
+  if(isTxt){
+    $('pfont').value=o.fontFamily||'Syne';
+    $('pfs').value=o.fontSize||36;
+    const fw=String(o.fontWeight||'400');
+    $('i-b').classList.toggle('on',fw>='700'||fw==='bold');
+    $('i-i').classList.toggle('on',o.fontStyle==='italic');
+    $('i-u').classList.toggle('on',!!o.underline);
+    $('i-s').classList.toggle('on',!!o.linethrough);
+    const tc=typeof o.fill==='string'&&o.fill.startsWith('#')?o.fill:'#000000';
+    $('ptc').value=tc;
+    $('plh').value=o.lineHeight||1.2;
+    $('pls').value=o.charSpacing||0;
+    $('ptoutw').value=o.strokeWidth||0;
+    const ptout=o.stroke&&o.stroke.startsWith('#')?o.stroke:'#000000';
+    $('ptout').value=ptout;
+    const sh=o.shadow;
+    if(sh){$('pshc').value=sh.color?.startsWith('#')?sh.color:'#000000';$('pshb').value=sh.blur||0;$('pshx').value=sh.offsetX||0;$('pshy').value=sh.offsetY||0;}
+  }
+  if(isRect){$('prx').value=o.rx||0;}
+}
+
+function sp(k,val){ const o=cnv.getActiveObject();if(!o)return;o.set(k,val);cnv.renderAll(); }
+function spW(val){ const o=cnv.getActiveObject();if(!o)return; if($('lockr').checked){const sc=val/(o.getBoundingRect().width||1);o.scaleX*=sc;o.scaleY*=sc;}else{o.scaleX=val/o.width;}cnv.renderAll(); }
+function spH(val){ const o=cnv.getActiveObject();if(!o)return; if($('lockr').checked){const sc=val/(o.getBoundingRect().height||1);o.scaleX*=sc;o.scaleY*=sc;}else{o.scaleY=val/o.height;}cnv.renderAll(); }
+function stp(k,val){ const o=cnv.getActiveObject();if(!o)return;o.set(k,val);cnv.renderAll(); }
+
+function toggleBold(){ const o=cnv.getActiveObject();if(!o)return;const isBold=String(o.fontWeight)>='700';o.set('fontWeight',isBold?'400':'700');$('i-b').classList.toggle('on',!isBold);cnv.renderAll(); }
+function toggleItalic(){ const o=cnv.getActiveObject();if(!o)return;const ii=o.fontStyle==='italic';o.set('fontStyle',ii?'normal':'italic');$('i-i').classList.toggle('on',!ii);cnv.renderAll(); }
+function toggleUnderline(){ const o=cnv.getActiveObject();if(!o)return;o.set('underline',!o.underline);$('i-u').classList.toggle('on',!!o.underline);cnv.renderAll(); }
+function toggleStrike(){ const o=cnv.getActiveObject();if(!o)return;o.set('linethrough',!o.linethrough);$('i-s').classList.toggle('on',!!o.linethrough);cnv.renderAll(); }
+
+function updateShadow() {
+  const o=cnv.getActiveObject();if(!o)return;
+  const blur=+$('pshb').value,ox=+$('pshx').value,oy=+$('pshy').value;
+  if(blur===0&&ox===0&&oy===0){o.set('shadow',null);}
+  else{o.set('shadow',new fabric.Shadow({color:$('pshc').value,blur,offsetX:ox,offsetY:oy}));}
+  cnv.renderAll();
+}
+
+function setDash(v) { const o=cnv.getActiveObject();if(!o)return;if(v==='dashed')o.set('strokeDashArray',[10,6]);else if(v==='dotted')o.set('strokeDashArray',[2,6]);else o.set('strokeDashArray',null);cnv.renderAll(); }
+
+function gradFill() {
+  const o=cnv.getActiveObject();if(!o)return;
+  o.set('fill',new fabric.Gradient({type:'linear',gradientUnits:'percentage',coords:{x1:0,y1:0,x2:1,y2:0},colorStops:[{offset:0,color:'#e8ff47'},{offset:1,color:'#00e5c4'}]}));
+  cnv.renderAll();toast('Gradient applied');
+}
+
+function applyFilt() {
+  const o=cnv.getActiveObject();if(!o||o.type!=='image')return;
+  const br=+$('f-br').value,co=+$('f-co').value,sa=+$('f-sa').value,bl=+$('f-bl').value;
+  $('fv-br').textContent=br;$('fv-co').textContent=co;$('fv-sa').textContent=sa;$('fv-bl').textContent=bl;
+  o.filters=[];
+  if(br!==0)o.filters.push(new fabric.Image.filters.Brightness({brightness:br}));
+  if(co!==0)o.filters.push(new fabric.Image.filters.Contrast({contrast:co}));
+  if(sa!==0)o.filters.push(new fabric.Image.filters.Saturation({saturation:sa}));
+  if(bl>0)o.filters.push(new fabric.Image.filters.Blur({blur:bl}));
+  o.applyFilters();cnv.renderAll();
+}
+function setFiltPreset(p){ const o=cnv.getActiveObject();if(!o||o.type!=='image')return;o.filters=[];if(p==='gs')o.filters.push(new fabric.Image.filters.Grayscale());else if(p==='sep')o.filters.push(new fabric.Image.filters.Sepia());else if(p==='inv')o.filters.push(new fabric.Image.filters.Invert());o.applyFilters();cnv.renderAll(); }
+
+// Layers panel
+function refreshLayers() {
+  const list=$('lay-list'),objs=cnv.getObjects(),active=cnv.getActiveObject();
+  if(!objs.length){list.innerHTML='<div style="padding:20px;text-align:center;color:var(--txt3);font-size:11px;">No objects</div>';return;}
+  list.innerHTML=[...objs].reverse().map((obj,i)=>{
+    const ri=objs.length-1-i;
+    const ico=obj.type==='textbox'||obj.type==='text'?'T':obj.type==='image'?'🖼':obj.type==='circle'?'●':obj.type==='rect'?'▬':obj.type==='polygon'?'★':'◆';
+    const lbl=obj.type==='textbox'?(obj.text||'').slice(0,22):`${obj.type} ${ri+1}`;
+    return `<div class="lay-item${active===obj?' on':''}" onclick="selectLay(${ri})">
+      <span class="lay-ico">${ico}</span>
+      <span class="lay-lbl">${lbl}</span>
+      <div class="lay-acts">
+        <button onclick="event.stopPropagation();toggleVis(${ri})" title="Toggle">${obj.visible===false?'○':'●'}</button>
+        <button onclick="event.stopPropagation();lockLay(${ri})" title="Lock">${obj.selectable===false?'🔒':'🔓'}</button>
+        <button onclick="event.stopPropagation();cnv.remove(cnv.item(${ri}));cnv.renderAll();" title="Delete">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function selectLay(i){ cnv.setActiveObject(cnv.item(i));cnv.requestRenderAll();updateProps(); }
+function toggleVis(i){ const o=cnv.item(i);o.set('visible',o.visible===false);cnv.renderAll();refreshLayers(); }
+function lockLay(i){ const o=cnv.item(i);o.set('selectable',o.selectable===false);cnv.renderAll();refreshLayers(); }
+
+// Panel tabs
+function ptab(id) {
+  ['props','layers','hist'].forEach(t=>{ $('pt-'+t).style.display=t===id?'block':'none'; });
+  document.querySelectorAll('.ptab').forEach((b,i)=>{ b.classList.toggle('on',['props','layers','hist'][i]===id); });
+}
+
+// Export
+function exportPNG(){ const d=cnv.toDataURL({format:'png',multiplier:2}); const a=document.createElement('a');a.href=d;a.download='nova-design.png';a.click();toast('PNG exported','ok'); }
+function exportPDF(){ const {jsPDF}=window.jspdf;const d=cnv.toDataURL({format:'jpeg',quality:.92});const pdf=new jsPDF({orientation:cW>cH?'l':'p',unit:'px',format:[cW,cH]});pdf.addImage(d,'JPEG',0,0,cW,cH);pdf.save('nova-design.pdf');toast('PDF exported','ok'); }
+function exportSVG(){ const svg=cnv.toSVG();dlBlob(new Blob([svg],{type:'image/svg+xml'}),'nova-design.svg');toast('SVG exported','ok'); }
+
+// ══════════════════════════════════════════════════════════════
+//  VIDEO EDITOR
+// ══════════════════════════════════════════════════════════════
+const vs = {
+  loaded:false, dur:0, trimS:0, trimE:0, muted:false,
+  cropEnabled:false, crop:{x:0,y:0,w:640,h:360},
+  fx:{br:100,co:100,sa:100,hu:0,bl:0,se:0,gr:0,iv:0},
+  captions:[], rawSegs:[], capStyle:'default', capPos:'bottom', capSize:18
+};
+
+function handleVid(e) {
+  const f=e.target.files[0];if(!f)return;
+  G.audioFile=f; $('stt-fn').textContent='📎 '+f.name;
+  const url=URL.createObjectURL(f);
+  $('vid').src=url;
+  $('vdropzone').style.display='none';
+  $('vplayer').classList.add('show');
+  toast('Video loaded','ok'); e.target.value='';
+}
+
+function handleAudio(e) { const f=e.target.files[0];if(!f)return;G.audioFile=f;$('stt-fn').textContent='📎 '+f.name;e.target.value=''; }
+
+function onVL() {
+  const vid=$('vid');
+  vs.dur=vid.duration; vs.trimS=0; vs.trimE=vid.duration;
+  $('t-in').value=0; $('t-out').value=vid.duration.toFixed(2);
+  $('vtime').textContent=`0:00 / ${fmtT(vid.duration)}`;
+  updateTrimBar(); updateTrimDur();
+  vs.crop={x:0,y:0,w:vid.offsetWidth||640,h:vid.offsetHeight||360};
+  updateCropInputs();
+}
+function onVT() {
+  const vid=$('vid'),pct=(vid.currentTime/vid.duration)*100;
+  $('vfill').style.width=pct+'%';
+  $('vtime').textContent=`${fmtT(vid.currentTime)} / ${fmtT(vid.duration)}`;
+  $('trim-played').style.left=(vs.trimS/vs.dur*100)+'%';
+  $('trim-played').style.width=((vid.currentTime-vs.trimS)/vs.dur*100)+'%';
+  showCapAt(vid.currentTime);
+  if(vid.currentTime>=vs.trimE){vid.pause();$('vplay').textContent='▶';}
+}
+function onVE(){ $('vplay').textContent='▶'; }
+function togglePlay() {
+  const vid=$('vid'),btn=$('vplay');
+  if(vid.paused){if(vid.currentTime>=vs.trimE)vid.currentTime=vs.trimS;vid.play();btn.textContent='⏸';}
+  else{vid.pause();btn.textContent='▶';}
+}
+function toggleMute(){ const vid=$('vid');vs.muted=!vs.muted;vid.muted=vs.muted;$('mute-btn').textContent=vs.muted?'🔇':'🔊'; }
+function seekV(e){ const bar=$('vbar'),r=bar.getBoundingClientRect();$('vid').currentTime=((e.clientX-r.left)/r.width)*vs.dur; }
+
+// Trim
+function initTrimHandles() {
+  const bar=$('trim-bar'),hs=$('th-s'),he=$('th-e');
+  let drag=null;
+  const mv=e=>{
+    if(!drag)return;
+    const r=bar.getBoundingClientRect(),pct=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width));
+    if(drag==='s'){vs.trimS=Math.max(0,Math.min(pct*vs.dur,vs.trimE-.1));$('t-in').value=vs.trimS.toFixed(2);}
+    else{vs.trimE=Math.min(vs.dur,Math.max(pct*vs.dur,vs.trimS+.1));$('t-out').value=vs.trimE.toFixed(2);}
+    updateTrimBar();updateTrimDur();
+  };
+  const up=()=>{drag=null;};
+  hs.addEventListener('pointerdown',e=>{e.preventDefault();drag='s';hs.setPointerCapture(e.pointerId);});
+  he.addEventListener('pointerdown',e=>{e.preventDefault();drag='e';he.setPointerCapture(e.pointerId);});
+  document.addEventListener('pointermove',mv);
+  document.addEventListener('pointerup',up);
+}
+function updateTrimBar(){
+  const dur=vs.dur||1;
+  $('th-s').style.left=(vs.trimS/dur*100)+'%';
+  $('th-e').style.left=(vs.trimE/dur*100)+'%';
+  $('trim-region').style.left=(vs.trimS/dur*100)+'%';
+  $('trim-region').style.width=((vs.trimE-vs.trimS)/dur*100)+'%';
+}
+function updateTrimDur(){ $('trim-dur').textContent=fmtT(vs.trimE-vs.trimS);$('t-dur').textContent=fmtT(vs.trimE-vs.trimS); }
+function setTI(v){ vs.trimS=Math.max(0,Math.min(v,vs.trimE-.1));$('t-in').value=vs.trimS.toFixed(2);updateTrimBar();updateTrimDur(); }
+function setTO(v){ vs.trimE=Math.min(vs.dur,Math.max(v,vs.trimS+.1));$('t-out').value=vs.trimE.toFixed(2);updateTrimBar();updateTrimDur(); }
+function resetTrim(){ vs.trimS=0;vs.trimE=vs.dur;$('t-in').value=0;$('t-out').value=vs.dur.toFixed(2);updateTrimBar();updateTrimDur(); }
+function seekByTrim(e){ const bar=$('trim-bar'),r=bar.getBoundingClientRect();$('vid').currentTime=((e.clientX-r.left)/r.width)*vs.dur; }
+
+// Crop
+function toggleCrop() {
+  vs.cropEnabled=!vs.cropEnabled;
+  $('crop-overlay').classList.toggle('show',vs.cropEnabled);
+  $('crop-toggle').textContent=vs.cropEnabled?'Disable Crop':'Enable Crop';
+  $('crop-toggle').classList.toggle('on',vs.cropEnabled);
+  if(vs.cropEnabled){drawCropOverlay();initCropHandles();}
+}
+function updateCropInputs(){ $('cx').value=Math.round(vs.crop.x);$('cy').value=Math.round(vs.crop.y);$('cw').value=Math.round(vs.crop.w);$('ch2').value=Math.round(vs.crop.h); }
+function setCropFromInputs(){ vs.crop={x:+$('cx').value,y:+$('cy').value,w:+$('cw').value,h:+$('ch2').value};drawCropOverlay(); }
+function cropPreset(ratio) {
+  const vid=$('vid'),vw=vid.offsetWidth,vh=vid.offsetHeight;
+  let w,h;
+  if(ratio==='16:9'){w=vw*.9;h=w*9/16;}
+  else if(ratio==='1:1'){const s=Math.min(vw,vh)*.85;w=s;h=s;}
+  else if(ratio==='9:16'){h=vh*.9;w=h*9/16;}
+  else if(ratio==='4:3'){w=vw*.9;h=w*3/4;}
+  else if(ratio==='21:9'){w=vw*.95;h=w*9/21;}
+  vs.crop={x:(vw-w)/2,y:(vh-h)/2,w,h};
+  updateCropInputs();drawCropOverlay();
+}
+function resetCrop(){ const vid=$('vid');vs.crop={x:0,y:0,w:vid.offsetWidth||640,h:vid.offsetHeight||360};updateCropInputs();drawCropOverlay(); }
+function drawCropOverlay() {
+  const cc=$('crop-canvas'),cont=$('vscreen');
+  cc.width=cont.offsetWidth;cc.height=cont.offsetHeight;
+  const ctx=cc.getContext('2d'),c=vs.crop;
+  ctx.clearRect(0,0,cc.width,cc.height);
+  ctx.fillStyle='rgba(0,0,0,.55)';ctx.fillRect(0,0,cc.width,cc.height);
+  ctx.clearRect(c.x,c.y,c.w,c.h);
+  ctx.strokeStyle='rgba(232,255,71,.9)';ctx.lineWidth=2;ctx.strokeRect(c.x,c.y,c.w,c.h);
+  ctx.strokeStyle='rgba(255,255,255,.2)';ctx.lineWidth=.5;ctx.setLineDash([4,4]);
+  for(let i=1;i<3;i++){
+    ctx.beginPath();ctx.moveTo(c.x+c.w*i/3,c.y);ctx.lineTo(c.x+c.w*i/3,c.y+c.h);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(c.x,c.y+c.h*i/3);ctx.lineTo(c.x+c.w,c.y+c.h*i/3);ctx.stroke();
+  }
+  ctx.setLineDash([]);
+  // Position handles
+  const pts={tl:[c.x,c.y],tr:[c.x+c.w,c.y],bl:[c.x,c.y+c.h],br:[c.x+c.w,c.y+c.h],
+    tm:[c.x+c.w/2,c.y],bm:[c.x+c.w/2,c.y+c.h],ml:[c.x,c.y+c.h/2],mr:[c.x+c.w,c.y+c.h/2]};
+  Object.entries(pts).forEach(([n,[x,y]])=>{ const h=$('ch-'+n);if(h){h.style.left=x+'px';h.style.top=y+'px';} });
+  const cb=$('crop-box');cb.style.left=c.x+'px';cb.style.top=c.y+'px';cb.style.width=c.w+'px';cb.style.height=c.h+'px';
+}
+function initCropHandles() {
+  const c=vs.crop;
+  document.querySelectorAll('.ch').forEach(h=>{
+    h.addEventListener('pointerdown',e=>{
+      e.preventDefault();e.stopPropagation();
+      const pos=h.dataset.c,sx=e.clientX,sy=e.clientY,sc={...c};
+      const mv=e=>{
+        const dx=e.clientX-sx,dy=e.clientY-sy;
+        if(pos==='tl'){vs.crop.x=sc.x+dx;vs.crop.y=sc.y+dy;vs.crop.w=Math.max(30,sc.w-dx);vs.crop.h=Math.max(30,sc.h-dy);}
+        else if(pos==='tr'){vs.crop.y=sc.y+dy;vs.crop.w=Math.max(30,sc.w+dx);vs.crop.h=Math.max(30,sc.h-dy);}
+        else if(pos==='bl'){vs.crop.x=sc.x+dx;vs.crop.w=Math.max(30,sc.w-dx);vs.crop.h=Math.max(30,sc.h+dy);}
+        else if(pos==='br'){vs.crop.w=Math.max(30,sc.w+dx);vs.crop.h=Math.max(30,sc.h+dy);}
+        else if(pos==='tm'){vs.crop.y=sc.y+dy;vs.crop.h=Math.max(30,sc.h-dy);}
+        else if(pos==='bm'){vs.crop.h=Math.max(30,sc.h+dy);}
+        else if(pos==='ml'){vs.crop.x=sc.x+dx;vs.crop.w=Math.max(30,sc.w-dx);}
+        else if(pos==='mr'){vs.crop.w=Math.max(30,sc.w+dx);}
+        updateCropInputs();drawCropOverlay();
+      };
+      const up=()=>{document.removeEventListener('pointermove',mv);document.removeEventListener('pointerup',up);};
+      h.setPointerCapture(e.pointerId);document.addEventListener('pointermove',mv);document.addEventListener('pointerup',up);
+    });
+  });
+  $('crop-box').addEventListener('pointerdown',e=>{
+    e.preventDefault();const sx=e.clientX,sy=e.clientY,sc={...c};
+    const mv=e=>{vs.crop.x=sc.x+(e.clientX-sx);vs.crop.y=sc.y+(e.clientY-sy);updateCropInputs();drawCropOverlay();};
+    const up=()=>{document.removeEventListener('pointermove',mv);document.removeEventListener('pointerup',up);};
+    $('crop-box').setPointerCapture(e.pointerId);document.addEventListener('pointermove',mv);document.addEventListener('pointerup',up);
+  });
+}
+
+// Video FX
+function applyVFX() {
+  const vid=$('vid'),e=vs.fx;
+  e.br=+$('vf-br').value;e.co=+$('vf-co').value;e.sa=+$('vf-sa').value;
+  e.hu=+$('vf-hu').value;e.bl=+$('vf-bl').value;e.se=+$('vf-se').value;
+  e.gr=+$('vf-gr').value;e.iv=+$('vf-in').value;
+  $('vfv-br').textContent=e.br;$('vfv-co').textContent=e.co;$('vfv-sa').textContent=e.sa;
+  $('vfv-hu').textContent=e.hu+'°';$('vfv-bl').textContent=e.bl+'px';
+  $('vfv-se').textContent=e.se+'%';$('vfv-gr').textContent=e.gr+'%';$('vfv-in').textContent=e.iv+'%';
+  vid.style.filter=buildFX(e);
+}
+function buildFX(e=vs.fx){ return `brightness(${e.br}%) contrast(${e.co}%) saturate(${e.sa}%) hue-rotate(${e.hu}deg) blur(${e.bl}px) sepia(${e.se}%) grayscale(${e.gr}%) invert(${e.iv}%)`; }
+function resetVFX(){
+  vs.fx={br:100,co:100,sa:100,hu:0,bl:0,se:0,gr:0,iv:0};
+  ['vf-br','vf-co','vf-sa'].forEach(id=>$(id).value=100);
+  ['vf-hu','vf-bl','vf-se','vf-gr','vf-in'].forEach(id=>$(id).value=0);
+  applyVFX();
+}
+function vfxPreset(p) {
+  const presets={
+    vivid:{br:110,co:120,sa:140,hu:0,bl:0,se:0,gr:0,iv:0},
+    cool:{br:100,co:105,sa:80,hu:180,bl:0,se:0,gr:0,iv:0},
+    warm:{br:105,co:100,sa:110,hu:20,bl:0,se:15,gr:0,iv:0},
+    bw:{br:100,co:110,sa:0,hu:0,bl:0,se:0,gr:100,iv:0},
+    sepia:{br:100,co:100,sa:0,hu:0,bl:0,se:100,gr:0,iv:0},
+    neon:{br:110,co:130,sa:180,hu:90,bl:0,se:0,gr:0,iv:0},
+    cinematic:{br:90,co:115,sa:80,hu:0,bl:0,se:20,gr:15,iv:0},
+  };
+  const pr=presets[p];if(!pr)return;
+  vs.fx={...pr};
+  Object.entries({br:'vf-br',co:'vf-co',sa:'vf-sa',hu:'vf-hu',bl:'vf-bl',se:'vf-se',gr:'vf-gr',iv:'vf-in'}).forEach(([k,id])=>$(id).value=vs.fx[k]);
+  applyVFX();toast(p.charAt(0).toUpperCase()+p.slice(1)+' preset applied','ok');
+}
+
+// Captions
+function showCapAt(t) {
+  const overlay=$('cap-overlay');
+  const cap=vs.captions.find(c=>t>=c.s&&t<=c.e);
+  if(cap){ renderCapOverlay(overlay,cap.text); }
+  else{ overlay.style.display='none'; }
+  document.querySelectorAll('.citem').forEach(el=>el.classList.toggle('on',+el.dataset.id===cap?.id));
+}
+function renderCapOverlay(el,text) {
+  const styles={
+    default:{background:'rgba(0,0,0,.85)',color:'#fff',fontWeight:'500',textShadow:'none',padding:'6px 16px',borderRadius:'5px',backdropFilter:'blur(4px)'},
+    yellow:{background:'rgba(0,0,0,.9)',color:'#ffe000',fontWeight:'800',textShadow:'none',padding:'6px 16px',borderRadius:'5px'},
+    outline:{background:'transparent',color:'#fff',fontWeight:'800',textShadow:'-2px -2px 0 #000,2px -2px 0 #000,-2px 2px 0 #000,2px 2px 0 #000',padding:'6px 16px'},
+    minimal:{background:'rgba(255,255,255,.12)',color:'#fff',fontWeight:'400',backdropFilter:'blur(10px)',padding:'5px 14px',borderRadius:'4px',border:'1px solid rgba(255,255,255,.2)'},
+    subtitles:{background:'rgba(0,0,0,.95)',color:'#fff',fontWeight:'400',padding:'7px 20px',borderRadius:'2px'},
+  };
+  const st=styles[vs.capStyle]||styles.default;
+  el.textContent=text;
+  el.style.cssText='';
+  el.style.display='block';
+  el.style.fontSize=(vs.capSize||18)+'px';
+  Object.assign(el.style,st);
+  const pos=vs.capPos||'bottom';
+  if(pos==='top'){el.style.top='40px';el.style.bottom='auto';}
+  else if(pos==='center'){el.style.top='50%';el.style.bottom='auto';el.style.transform='translate(-50%,-50%)';}
+  else{el.style.bottom='50px';el.style.top='auto';}
+}
+function renderCapList() {
+  const list=$('cap-list');
+  if(!vs.captions.length){list.innerHTML='<div style="padding:20px;text-align:center;color:var(--txt3);font-size:11px;">No captions — use Transcribe to generate them</div>';return;}
+  list.innerHTML=vs.captions.map(c=>`
+    <div class="citem" data-id="${c.id}" onclick="seekCap(${c.s})">
+      <div class="ct-time">${fmtT(c.s)} → ${fmtT(c.e)}</div>
+      <div class="ct-txt" contenteditable="true" onblur="updCap(${c.id},this.textContent)">${esc(c.text)}</div>
+    </div>`).join('');
+}
+function seekCap(t){ $('vid').currentTime=t; }
+function updCap(id,txt){ const c=vs.captions.find(c=>c.id===id);if(c)c.text=txt; }
+function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function exportSRT(){
+  if(!vs.captions.length){toast('No captions','err');return;}
+  const s=vs.captions.map((c,i)=>`${i+1}\n${toSRTt(c.s)} --> ${toSRTt(c.e)}\n${c.text}\n`).join('\n');
+  dlText(s,'captions.srt');toast('SRT exported','ok');
+}
+function exportVTT(){
+  if(!vs.captions.length){toast('No captions','err');return;}
+  const s='WEBVTT\n\n'+vs.captions.map((c,i)=>`${i+1}\n${toSRTt(c.s).replace(',','.')} --> ${toSRTt(c.e).replace(',','.')}\n${c.text}\n`).join('\n');
+  dlText(s,'captions.vtt');toast('VTT exported','ok');
+}
+
+// VIDEO EXPORT (MediaRecorder + Canvas rendering)
+async function doExportVideo() {
+  const vid=$('vid');
+  if(!vid.src){toast('No video loaded','err');return;}
+  const {trimS,trimE,cropEnabled,crop,fx}=vs;
+  const scaleX=vid.videoWidth/vid.offsetWidth||1;
+  const scaleY=vid.videoHeight/vid.offsetHeight||1;
+  const sx=cropEnabled?crop.x*scaleX:0,sy=cropEnabled?crop.y*scaleY:0;
+  const sw=cropEnabled?crop.w*scaleX:vid.videoWidth;
+  const sh=cropEnabled?crop.h*scaleY:vid.videoHeight;
+  const outW=Math.round(sw),outH=Math.round(sh);
+  const ec=document.createElement('canvas');ec.width=outW;ec.height=outH;
+  const ctx=ec.getContext('2d');
+  const cs=ec.captureStream(30);
+  try{const vs2=vid.captureStream?.();if(vs2)vs2.getAudioTracks().forEach(t=>cs.addTrack(t));}catch{}
+  const bitrate=+$('exp-q').value;
+  const mime=['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm','video/mp4'].find(t=>MediaRecorder.isTypeSupported(t))||'video/webm';
+  const rec=new MediaRecorder(cs,{mimeType:mime,videoBitsPerSecond:bitrate});
+  const chunks=[];
+  rec.ondataavailable=e=>{if(e.data.size>0)chunks.push(e.data);};
+  rec.onstop=()=>{
+    const blob=new Blob(chunks,{type:mime});
+    dlBlob(blob,'nova-export.'+(mime.includes('mp4')?'mp4':'webm'));
+    $('export-overlay').classList.remove('show');
+    vid.removeEventListener('timeupdate',renderFrame);
+    toast('Export complete!','ok');
+  };
+  $('export-overlay').classList.add('show');
+  $('export-pct').textContent='0%';
+  vid.currentTime=trimS;
+  await new Promise(r=>{vid.onseeked=r;});
+  rec.start(100);
+  vid.play();
+  function renderFrame(){
+    const pct=((vid.currentTime-trimS)/(trimE-trimS)*100).toFixed(0);
+    $('export-pct').textContent=pct+'%';
+    ctx.filter=buildFX(fx);
+    ctx.drawImage(vid,sx,sy,sw,sh,0,0,outW,outH);
+    if(vid.currentTime>=trimE){vid.pause();rec.stop();}
+  }
+  vid.addEventListener('timeupdate',renderFrame);
+}
+
+// Video right panel tabs
+function vtab(id){
+  ['trim','crop','fx','caps'].forEach(t=>{$('vt-'+t).style.display=t===id?'block':'none';});
+  document.querySelectorAll('#vm-rp .ptab').forEach((b,i)=>b.classList.toggle('on',['trim','crop','fx','caps'][i]===id));
+}
+
+// ══════════════════════════════════════════════════════════════
+//  MODE SWITCHING
+// ══════════════════════════════════════════════════════════════
+function setMode(m) {
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
+  $('tab-'+m).classList.add('on');
+  $('design-mode').style.display=m==='design'?'flex':'none';
+  $('vmode').classList.toggle('show',m==='video');
+  $('design-exports').style.display=m==='design'?'flex':'none';
+  $('video-exports').style.display=m==='video'?'flex':'none';
+}
+
+// ══════════════════════════════════════════════════════════════
+//  AI FEATURES
+// ══════════════════════════════════════════════════════════════
+function mTab(modal,id){
+  const prefix='mt-'+modal+'-';
+  document.querySelectorAll(`[id^="${prefix}"]`).forEach(el=>{el.classList.toggle('on',el.id===prefix+id);});
+  document.querySelectorAll(`#${modal}-modal .mtab`).forEach(b=>b.classList.remove('on'));
+  event.target.classList.add('on');
+  G.writeTab=id;
+}
+
+async function runWrite() {
+  let sys,usr;
+  const t=G.writeTab;
+  if(t==='gen'){
+    const p=$('gen-prompt').value.trim();if(!p){toast('Enter a description','err');return;}
+    sys=`You are a professional copywriter. Generate ${G.tone} copy. Return ONLY the copy text — no labels, no quotes.`;usr=p;
+  }else if(t==='fix'){const p=$('fix-txt').value.trim();if(!p){toast('Enter text','err');return;}sys='Fix all grammar and spelling errors. Return ONLY the corrected text.';usr=p;}
+  else if(t==='expand'){const p=$('exp-txt').value.trim();if(!p){toast('Enter text','err');return;}sys='Expand this text to be more detailed and engaging. Return ONLY the expanded text.';usr=p;}
+  else if(t==='shorten'){const p=$('short-txt').value.trim();if(!p){toast('Enter text','err');return;}sys='Condense this to its most powerful version. Return ONLY the shortened text.';usr=p;}
+  else if(t==='rephrase'){const p=$('reph-txt').value.trim();if(!p){toast('Enter text','err');return;}sys='Rephrase this in a fresh original way keeping the same meaning. Return ONLY the rephrased text.';usr=p;}
+  else{const p=$('trans-txt').value.trim(),l=$('trans-lang').value.trim();if(!p||!l){toast('Enter text and target language','err');return;}sys=`Translate the following text to ${l}. Return ONLY the translated text.`;usr=p;}
+  showP('write-prog');$('write-res').classList.remove('open');$('write-acts').classList.remove('open');
+  try{
+    const r=await callChat(sys,usr,800);
+    $('write-res').textContent=r.trim();$('write-res').classList.add('open');$('write-acts').classList.add('open');
+    toast('Done!','ok');
+  }catch(e){toast(e.message,'err');}
+  finally{hideP('write-prog');}
+}
+
+function selTone(el,tone){
+  document.querySelectorAll('#ai-write-modal .aqb').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on');G.tone=tone;
+}
+
+async function aiText(op){
+  const o=cnv.getActiveObject();
+  if(!o||!['textbox','text'].includes(o.type)){toast('Select a text object first','err');return;}
+  const prompts={fix:'Fix grammar and spelling. Return only corrected text.',expand:'Expand this text, more detail and engagement. Return only expanded text.',short:'Shorten and punch this up. Return only condensed text.',rephrase:'Rephrase freshly. Return only rephrased text.'};
+  toast('AI processing…');
+  try{const r=await callChat(prompts[op],o.text,600);o.set('text',r.trim());cnv.renderAll();saveH();toast('Updated!','ok');}
+  catch(e){toast(e.message,'err');}
+}
+
+async function runTTS(){
+  const txt=$('tts-txt').value.trim();if(!txt){toast('Enter text','err');return;}
+  const spd=+$('tts-spd').value;
+  showP('tts-prog');$('tts-audio').classList.remove('show');$('tts-dl').style.display='none';
+  try{
+    const blob=await callTTS(txt,G.voice,spd);
+    G.ttsBlob=blob;const url=URL.createObjectURL(blob);
+    $('tts-audio').src=url;$('tts-audio').classList.add('show');
+    $('tts-dl').style.display='block';$('tts-audio').play();
+    toast('Speech generated!','ok');
+  }catch(e){
+    if(window.speechSynthesis){toast('Groq TTS unavailable, using browser TTS','err');const u=new SpeechSynthesisUtterance(txt);u.rate=spd;speechSynthesis.speak(u);}
+    else toast(e.message,'err');
+  }
+  finally{hideP('tts-prog');}
+}
+function dlTTS(){ if(G.ttsBlob)dlBlob(G.ttsBlob,'nova-speech.mp3'); }
+function selV(el){ document.querySelectorAll('.vopt').forEach(v=>v.classList.remove('on'));el.classList.add('on');G.voice=el.dataset.v; }
+
+async function runSTT(){
+  const f=G.audioFile;if(!f){toast('Upload an audio/video file first','err');return;}
+  showP('stt-prog');$('stt-res').classList.remove('open');$('stt-acts').classList.remove('open');
+  try{
+    const fd=new FormData();
+    fd.append('file',f,f.name);fd.append('model','whisper-large-v3-turbo');
+    fd.append('response_format','verbose_json');fd.append('timestamp_granularities[]','segment');
+    const lang=$('stt-lang').value;if(lang)fd.append('language',lang);
+    const data=await callSTT(fd);
+    G.rawSegs=data.segments||[{start:0,end:5,text:data.text||''}];
+    const fmt=G.rawSegs.map(s=>`[${fmtT(s.start)} → ${fmtT(s.end)}]\n${s.text.trim()}`).join('\n\n');
+    $('stt-res').textContent=fmt;$('stt-res').classList.add('open');$('stt-acts').classList.add('open');
+    toast(`Transcribed ${G.rawSegs.length} segments!`,'ok');
+  }catch(e){toast(e.message,'err');}
+  finally{hideP('stt-prog');}
+}
+
+function loadCaps(){
+  vs.captions=G.rawSegs.map((s,i)=>({id:i,s:s.start,e:s.end,text:s.text.trim()}));
+  renderCapList();closeModal('stt-modal');setMode('video');vtab('caps');
+  toast('Captions loaded!','ok');
+}
+
+async function translateCaps(){
+  if(!vs.captions.length){toast('No captions','err');return;}
+  const lang=prompt('Translate to (e.g. Spanish, French):');if(!lang)return;
+  toast('Translating captions…');
+  try{
+    const text=vs.captions.map(c=>c.text).join('\n||||\n');
+    const r=await callChat(`Translate each segment separated by "||||" into ${lang}. Return only translated segments separated by "||||" in same order. No extra text.`,text,2000);
+    const parts=r.split('||||').map(s=>s.trim());
+    if(parts.length>=vs.captions.length){vs.captions=vs.captions.map((c,i)=>({...c,text:parts[i]||c.text}));renderCapList();toast('Translated!','ok');}
+    else toast('Translation format mismatch','err');
+  }catch(e){toast(e.message,'err');}
+}
+
+async function runBG(){
+  const p=$('bg-prompt').value.trim();if(!p){toast('Describe the background','err');return;}
+  showP('bg-prog');$('bg-preview').style.display='none';
+  try{
+    const r=await callChat('You are a CSS expert. Return ONLY a valid CSS background-image or background value (gradient or solid color). No label, no semicolon, no markdown. Example outputs: "linear-gradient(135deg,#1a1a2e,#4f46e5)" or "radial-gradient(ellipse at top,#0f3460,#000)"',p,150);
+    const css=r.trim().replace(/^background(-image)?:\s*/i,'').replace(/;$/,'');
+    $('bg-preview').style.display='block';$('bg-preview').style.background=css;
+    // Apply to canvas via rendered background rect
+    const gc=document.createElement('canvas');gc.width=cW;gc.height=cH;
+    const gctx=gc.getContext('2d');
+    const stops=extractStops(css);
+    if(css.includes('radial-gradient')){const g=gctx.createRadialGradient(cW/2,cH/2,0,cW/2,cH/2,Math.max(cW,cH)/1.5);stops.forEach((s,i)=>g.addColorStop(i/(stops.length-1),s));gctx.fillStyle=g;}
+    else if(css.includes('gradient')){const g=gctx.createLinearGradient(0,0,cW,cH);stops.forEach((s,i)=>g.addColorStop(i/(stops.length-1),s));gctx.fillStyle=g;}
+    else{gctx.fillStyle=css||'#1a1a2e';}
+    gctx.fillRect(0,0,cW,cH);
+    fabric.Image.fromURL(gc.toDataURL(),img=>{img.set({left:0,top:0,selectable:false,evented:false});cnv.setBackgroundImage(img,cnv.renderAll.bind(cnv),{scaleX:1,scaleY:1});});
+    toast('Background applied!','ok');
+  }catch(e){toast(e.message,'err');}
+  finally{hideP('bg-prog');}
+}
+function extractStops(css){const re=/#[0-9a-fA-F]{3,8}|rgba?\([^)]+\)|hsl[a]?\([^)]+\)/g,m=[];let mt;while((mt=re.exec(css))!==null)m.push(mt[0]);return m.length>=2?m:['#1a1a2e','#4f46e5'];}
+
+async function runPalette(){
+  const p=$('pal-prompt').value.trim();if(!p){toast('Describe the palette','err');return;}
+  showP('pal-prog');$('pal-result').style.display='none';
+  try{
+    const r=await callChat('You are a color expert. Return a JSON object with exactly these keys: "colors" (array of 5 hex strings), "description" (1-2 sentence rationale). Return ONLY valid JSON, no markdown, no explanation.',p,300);
+    const clean=r.replace(/```json?|```/g,'').trim();
+    const data=JSON.parse(clean);
+    const sw=$('pal-swatches');sw.innerHTML='';
+    data.colors.forEach(c=>{
+      const d=document.createElement('div');d.className='palsw';
+      d.innerHTML=`<div class="pc" style="background:${c}"></div><div class="ph">${c}</div>`;
+      d.onclick=()=>{
+        const o=cnv.getActiveObject();if(o){sp('fill',c);toast('Color applied','ok');}else{setBg(c);toast('Background set','ok');}
+        copyTxt(c);
+      };
+      sw.appendChild(d);
+    });
+    $('pal-desc').textContent=data.description||'';
+    $('pal-result').style.display='block';
+    toast('Palette generated!','ok');
+  }catch(e){toast(e.message,'err');}
+  finally{hideP('pal-prog');}
+}
+
+// ══════════════════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════════════════
+// Drag & drop for video
+const dz=$('vdropzone');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('over');});
+dz.addEventListener('dragleave',()=>dz.classList.remove('over'));
+dz.addEventListener('drop',e=>{
+  e.preventDefault();dz.classList.remove('over');
+  const f=e.dataTransfer.files[0];
+  if(f&&f.type.startsWith('video/')){handleVid({target:{files:[f],value:''}});}
+});
+
+window.addEventListener('load',()=>{
+  initCanvas();
+  initTrimHandles();
+  if($('fkey'))$('fkey').value=G.fkey;
+  checkVercel();
+});
+</script>
+</body>
+</html>
